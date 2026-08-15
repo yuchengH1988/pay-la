@@ -70,10 +70,10 @@ export const expenses = [
 ];
 
 export const members = [
-  { name: "Calvin", balance: "+¥8,400", note: "Gets back", tone: "positive" },
-  { name: "Mina", balance: "-¥3,600", note: "Pays out", tone: "negative" },
-  { name: "Harry", balance: "-¥4,800", note: "Pays out", tone: "negative" },
-  { name: "Amy", balance: "¥0", note: "Settled", tone: "neutral" },
+  { name: "Calvin", balance: "+¥8,400", note: "Gets back", tone: "positive" as const },
+  { name: "Mina", balance: "-¥3,600", note: "Pays out", tone: "negative" as const },
+  { name: "Harry", balance: "-¥4,800", note: "Pays out", tone: "negative" as const },
+  { name: "Amy", balance: "¥0", note: "Settled", tone: "neutral" as const },
 ];
 
 export const settlements = [

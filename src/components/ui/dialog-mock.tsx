@@ -1,8 +1,9 @@
 import { Button } from "./button";
+import { Frame } from "./frame";
 
 export function DialogMock() {
   return (
-    <div className="rounded-xs border-[3px] border-border bg-background p-3 shadow-hard">
+    <Frame surface="background" className="p-3">
       <div className="mb-4 flex items-center justify-between border-b-[3px] border-border pb-2">
         <h3 className="type-h3">
           Delete expense?
@@ -18,6 +19,6 @@ export function DialogMock() {
         <Button variant="ghost">Cancel</Button>
         <Button variant="danger">Delete</Button>
       </div>
-    </div>
+    </Frame>
   );
 }

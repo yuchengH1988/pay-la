@@ -1,5 +1,6 @@
 import { Avatar } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
+import { type BalanceTone, toneText } from "@/src/components/ui/tone";
 
 export function MemberBalance({
   name,
@@ -10,12 +11,12 @@ export function MemberBalance({
   name: string;
   balance: string;
   note: string;
-  tone: string;
+  tone: BalanceTone;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b-[3px] border-border py-3">
       <div className="flex items-center gap-3">
-        <Avatar name={name} hot={tone === "negative"} />
+        <Avatar name={name} tone={tone === "negative" ? "secondary" : "primary"} />
         <div>
           <p className="font-bold">{name}</p>
           <p className="type-caption text-muted">{note}</p>
@@ -24,9 +25,7 @@ export function MemberBalance({
       <p
         className={cx(
           "type-amount-md",
-          tone === "positive" && "text-success",
-          tone === "negative" && "text-danger",
-          tone === "neutral" && "text-muted",
+          toneText[tone],
         )}
       >
         {balance}

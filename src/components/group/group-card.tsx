@@ -1,4 +1,4 @@
-import { Badge } from "@/src/components/ui";
+import { Badge, Frame } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
 
 export function GroupCard({
@@ -17,7 +17,7 @@ export function GroupCard({
   accent: string;
 }) {
   return (
-    <article className="relative rounded-xs border-[3px] border-border bg-surface-raised p-4 shadow-hard">
+    <Frame as="article" className="relative p-4">
       <div
         className={cx(
           "absolute -top-3 left-4 h-5 w-24 border-[3px] border-border",
@@ -38,6 +38,6 @@ export function GroupCard({
       <p className="type-amount-lg mt-8">
         {amount}
       </p>
-    </article>
+    </Frame>
   );
 }

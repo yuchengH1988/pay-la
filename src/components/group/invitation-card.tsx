@@ -1,8 +1,8 @@
-import { Badge, Button } from "@/src/components/ui";
+import { Badge, Button, Frame } from "@/src/components/ui";
 
 export function InvitationCard() {
   return (
-    <article className="rounded-xs border-[3px] border-border bg-surface-raised p-4 shadow-hard">
+    <Frame as="article" className="p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="type-h2">
           Invite link
@@ -15,6 +15,6 @@ export function InvitationCard() {
         </code>
         <Button className="min-h-9 px-3 text-sm">Copy</Button>
       </div>
-    </article>
+    </Frame>
   );
 }

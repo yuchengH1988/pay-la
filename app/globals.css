@@ -328,3 +328,7 @@ textarea {
   border: var(--border-strong) solid var(--border);
   box-shadow: var(--shadow-hard);
 }
+
+.flex-center {
+  @apply flex items-center justify-center;
+}

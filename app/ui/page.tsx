@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useMemo, useState } from "react";
+import { ShowcaseGrid, ShowcasePanel, TypeSamplePanel } from "./showcase-components";
 import { BalanceSummary, MemberBalance, SettlementSuggestion } from "@/src/components/balance";
 import { ExpenseCard } from "@/src/components/expense";
 import { GroupCard, InvitationCard } from "@/src/components/group";
@@ -12,6 +13,7 @@ import {
   CheckboxRow,
   DialogMock,
   EmptyState,
+  Frame,
   LoadingCard,
   SelectField,
   TextInput,
@@ -92,7 +94,7 @@ export default function UiPlayground() {
         <Hero />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-          <aside className="hidden rounded-xs border-[3px] border-border bg-surface p-4 shadow-hard lg:sticky lg:top-5 lg:block">
+          <Frame as="aside" surface="surface" className="hidden p-4 lg:sticky lg:top-5 lg:block">
             <p className="type-h3 mb-4">
               Explorer
             </p>
@@ -101,7 +103,7 @@ export default function UiPlayground() {
               activeId={activeId}
               onChange={setActiveId}
             />
-          </aside>
+          </Frame>
 
           <div className="lg:hidden">
             <label className="grid gap-2 rounded-xs border-[3px] border-border bg-surface p-3 shadow-hard">
@@ -128,7 +130,7 @@ export default function UiPlayground() {
             </label>
           </div>
 
-          <section className="min-w-0 rounded-xs border-[3px] border-border bg-surface p-4 shadow-hard md:p-6">
+          <Frame as="section" surface="surface" className="min-w-0 p-4 md:p-6">
             <div className="mb-6 flex items-end justify-between gap-4 border-b-[3px] border-border pb-4">
               <div>
                 <p className="type-caption text-muted">
@@ -141,7 +143,7 @@ export default function UiPlayground() {
               <div className="poster-grid hidden size-14 border-[3px] border-border md:block" />
             </div>
             {activeItem.render()}
-          </section>
+          </Frame>
         </div>
       </div>
     </main>
@@ -215,13 +217,13 @@ function Hero() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
-          <div className="rounded-xs border-[3px] border-border bg-primary p-4 text-primary-foreground shadow-hard">
+          <Frame surface="primary" className="p-4">
             <p className="type-control-lg">
               You owe
             </p>
             <p className="type-amount-xl mt-2">NT$640</p>
-          </div>
-          <div className="rounded-xs border-[3px] border-border bg-surface-raised p-4 shadow-hard">
+          </Frame>
+          <Frame className="p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
               <p className="type-h3">
                 Add expense
@@ -229,11 +231,11 @@ function Hero() {
               <Button className="min-h-10 px-3">+</Button>
             </div>
             <div className="grid gap-2">
-              <div className="type-caption h-10 border-[3px] border-border bg-background px-3 py-2 text-muted">
+              <div className="type-caption h-10 border-[3px] border-border bg-background flex-center text-muted">
                 # Dinner with friends
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-2">
-                <div className="type-amount-md border-[3px] border-border bg-background px-3 py-2">
+                <div className="type-amount-md border-[3px] border-border bg-background flex-center">
                   NT$1,280
                 </div>
                 <div className="type-h3 grid size-12 place-items-center border-[3px] border-border bg-secondary">
@@ -241,25 +243,10 @@ function Hero() {
                 </div>
               </div>
             </div>
-          </div>
+          </Frame>
         </div>
       </div>
     </header>
-  );
-}
-
-function ShowcaseGrid({ children }: { children: ReactNode }) {
-  return <div className="grid gap-5 xl:grid-cols-2">{children}</div>;
-}
-
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-xs border-[3px] border-border bg-background p-4 shadow-hard-sm">
-      <h3 className="type-h3 mb-4">
-        {title}
-      </h3>
-      {children}
-    </div>
   );
 }
 
@@ -267,16 +254,17 @@ function ColorsShowcase() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {palette.map(([name, swatch, note]) => (
-        <div
+        <Frame
           key={name}
-          className="rounded-xs border-[3px] border-border bg-surface-raised p-3 shadow-hard-sm"
+          shadow="sm"
+          className="p-3"
         >
           <div className={`${swatch} mb-3 h-16 rounded-xs border-[3px] border-border`} />
           <p className="type-control-lg">
             {name}
           </p>
           <p className="type-caption mt-1 text-muted">{note}</p>
-        </div>
+        </Frame>
       ))}
     </div>
   );
@@ -316,57 +304,32 @@ function TypographyShowcase() {
       <TypeSamplePanel title="Interface text" samples={interfaceSamples} />
       <TypeSamplePanel title="Amount / Numeric" samples={amountSamples} />
 
-      <Panel title="Font preview">
+      <ShowcasePanel title="Font preview">
         <div className="grid gap-4 lg:grid-cols-3">
           {[
             ["Current display", "var(--font-display)", "PAY LA SPLITS"],
             ["Current body", "var(--font-body)", "Friendly expense details"],
             ["Current amount", "var(--font-amount)", "NT$12,800"],
           ].map(([label, family, text]) => (
-            <div key={label} className="border-[3px] border-border bg-surface-raised p-3 shadow-hard-sm">
+            <Frame key={label} shadow="sm" className="p-3">
               <p className="type-caption mb-3 text-muted">
                 {label}
               </p>
               <p className="type-amount-lg" style={{ fontFamily: family }}>
                 {text}
               </p>
-            </div>
+            </Frame>
           ))}
         </div>
-      </Panel>
+      </ShowcasePanel>
     </div>
-  );
-}
-
-function TypeSamplePanel({
-  title,
-  samples,
-}: {
-  title: string;
-  samples: string[][];
-}) {
-  return (
-    <Panel title={title}>
-      <div className="grid gap-4">
-        {samples.map(([label, text, className]) => (
-          <div
-            key={label}
-            className="border-b-[3px] border-border pb-4 last:border-b-0 last:pb-0"
-          >
-            <p className="type-caption mb-2 text-muted">{label}</p>
-            <p className={className}>{text}</p>
-            <p className="type-caption mt-2 text-muted">{className}</p>
-          </div>
-        ))}
-      </div>
-    </Panel>
   );
 }
 
 function SpacingRadiusShowcase() {
   return (
     <ShowcaseGrid>
-      <Panel title="Radius">
+      <ShowcasePanel title="Radius">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {["0", "2", "4", "8"].map((radius) => (
             <div
@@ -378,8 +341,8 @@ function SpacingRadiusShowcase() {
             </div>
           ))}
         </div>
-      </Panel>
-      <Panel title="Spacing">
+      </ShowcasePanel>
+      <ShowcasePanel title="Spacing">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {["4", "8", "12", "20"].map((space) => (
             <div key={space} className="border-[3px] border-border bg-surface-raised p-2 shadow-hard-sm">
@@ -388,7 +351,7 @@ function SpacingRadiusShowcase() {
             </div>
           ))}
         </div>
-      </Panel>
+      </ShowcasePanel>
     </ShowcaseGrid>
   );
 }
@@ -396,7 +359,7 @@ function SpacingRadiusShowcase() {
 function ButtonShowcase() {
   return (
     <div className="grid gap-5">
-      <Panel title="Variants">
+      <ShowcasePanel title="Variants">
         <div className="flex flex-wrap gap-3">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
@@ -404,21 +367,21 @@ function ButtonShowcase() {
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
         </div>
-      </Panel>
-      <Panel title="Sizes">
+      </ShowcasePanel>
+      <ShowcasePanel title="Sizes">
         <div className="flex flex-wrap items-center gap-3">
           <Button size="sm">Small</Button>
           <Button size="md">Medium</Button>
           <Button size="lg">Large</Button>
         </div>
-      </Panel>
-      <Panel title="States">
+      </ShowcasePanel>
+      <ShowcasePanel title="States">
         <div className="flex flex-wrap gap-3">
           <Button>Default</Button>
           <Button disabled>Disabled</Button>
           <Button loading>Loading</Button>
         </div>
-      </Panel>
+      </ShowcasePanel>
     </div>
   );
 }
@@ -426,18 +389,18 @@ function ButtonShowcase() {
 function InputShowcase() {
   return (
     <ShowcaseGrid>
-      <Panel title="Default / Focus">
+      <ShowcasePanel title="Default / Focus">
         <div className="grid gap-4">
           <TextInput label="Expense name" placeholder="Ramen dinner" />
           <TextInput label="Amount" defaultValue="NT$1,280" />
         </div>
-      </Panel>
-      <Panel title="Error / Disabled">
+      </ShowcasePanel>
+      <ShowcasePanel title="Error / Disabled">
         <div className="grid gap-4">
           <TextInput label="Amount" defaultValue="0" error="Amount must be greater than 0." />
           <TextInput label="Paid by" defaultValue="Calvin" disabled />
         </div>
-      </Panel>
+      </ShowcasePanel>
     </ShowcaseGrid>
   );
 }
@@ -445,20 +408,20 @@ function InputShowcase() {
 function SelectShowcase() {
   return (
     <ShowcaseGrid>
-      <Panel title="Select">
+      <ShowcasePanel title="Select">
         <SelectField label="Category" defaultValue="Food">
           <option>Food</option>
           <option>Transport</option>
           <option>Travel</option>
         </SelectField>
-      </Panel>
-      <Panel title="Split method">
+      </ShowcasePanel>
+      <ShowcasePanel title="Split method">
         <SelectField label="Split method" defaultValue="Equal">
           <option>Equal</option>
           <option>Exact Amount</option>
           <option>Percentage</option>
         </SelectField>
-      </Panel>
+      </ShowcasePanel>
     </ShowcaseGrid>
   );
 }
@@ -466,55 +429,55 @@ function SelectShowcase() {
 function CheckboxRadioShowcase() {
   return (
     <ShowcaseGrid>
-      <Panel title="Checkbox">
+      <ShowcasePanel title="Checkbox">
         <div className="grid gap-3">
           <CheckboxRow label="Calvin participates" checked />
           <CheckboxRow label="Mina participates" />
         </div>
-      </Panel>
-      <Panel title="Radio">
+      </ShowcasePanel>
+      <ShowcasePanel title="Radio">
         <div className="grid gap-3">
           <CheckboxRow label="Equal split" checked type="radio" />
           <CheckboxRow label="Exact amount" type="radio" />
         </div>
-      </Panel>
+      </ShowcasePanel>
     </ShowcaseGrid>
   );
 }
 
 function BadgeShowcase() {
   return (
-    <Panel title="Tones">
+    <ShowcasePanel title="Tones">
       <div className="flex flex-wrap gap-2">
         <Badge>Primary</Badge>
         <Badge tone="accent">New</Badge>
         <Badge tone="danger">Error</Badge>
         <Badge tone="muted">Settled</Badge>
       </div>
-    </Panel>
+    </ShowcasePanel>
   );
 }
 
 function AvatarShowcase() {
   return (
-    <Panel title="Members">
+    <ShowcasePanel title="Members">
       <div className="flex flex-wrap gap-3">
         <Avatar name="Calvin" />
-        <Avatar name="Mina" hot />
+        <Avatar name="Mina" tone="secondary" />
         <Avatar name="Harry" />
-        <Avatar name="Amy" hot />
+        <Avatar name="Amy" tone="secondary" />
       </div>
-    </Panel>
+    </ShowcasePanel>
   );
 }
 
 function ModalAlertShowcase() {
   return (
     <ShowcaseGrid>
-      <Panel title="Modal">
+      <ShowcasePanel title="Modal">
         <DialogMock />
-      </Panel>
-      <Panel title="Alert">
+      </ShowcasePanel>
+      <ShowcasePanel title="Alert">
         <div className="grid gap-4">
           <Alert title="Invalid split" tone="danger">
             Percentages must add up to exactly 100 before saving.
@@ -523,7 +486,7 @@ function ModalAlertShowcase() {
             No one owes money in this group right now.
           </Alert>
         </div>
-      </Panel>
+      </ShowcasePanel>
     </ShowcaseGrid>
   );
 }
@@ -541,11 +504,11 @@ function GroupShowcase() {
 
 function ExpenseShowcase() {
   return (
-    <Panel title="Recent expenses">
+    <ShowcasePanel title="Recent expenses">
       {expenses.map((expense) => (
         <ExpenseCard key={expense.title} {...expense} />
       ))}
-    </Panel>
+    </ShowcasePanel>
   );
 }
 
@@ -553,24 +516,24 @@ function BalanceShowcase() {
   return (
     <div className="grid gap-5">
       <BalanceSummary />
-      <Panel title="Member balance">
+      <ShowcasePanel title="Member balance">
         {members.map((member) => (
           <MemberBalance key={member.name} {...member} />
         ))}
-      </Panel>
+      </ShowcasePanel>
     </div>
   );
 }
 
 function SettlementShowcase() {
   return (
-    <Panel title="Settle faster">
+    <ShowcasePanel title="Settle faster">
       <div className="grid gap-3">
         {settlements.map((settlement) => (
           <SettlementSuggestion key={`${settlement.from}-${settlement.to}`} {...settlement} />
         ))}
       </div>
-    </Panel>
+    </ShowcasePanel>
   );
 }
 

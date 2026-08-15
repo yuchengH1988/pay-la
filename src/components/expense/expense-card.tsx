@@ -1,13 +1,6 @@
 import { Badge } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
-
-type Tone = "positive" | "negative" | "neutral";
-
-const toneText: Record<Tone, string> = {
-  positive: "text-success",
-  negative: "text-danger",
-  neutral: "text-muted",
-};
+import { type BalanceTone, toneText } from "@/src/components/ui/tone";
 
 export function ExpenseCard({
   title,
@@ -24,7 +17,7 @@ export function ExpenseCard({
   date: string;
   amount: string;
   effect: string;
-  tone: Tone;
+  tone: BalanceTone;
 }) {
   return (
     <article className="grid grid-cols-[1fr_auto] gap-4 border-b-[3px] border-border bg-surface px-1 py-4">

@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { cx } from "./cx";
+import { FieldLabel } from "./field-label";
 
 export function TextInput({
   label,
@@ -8,7 +9,7 @@ export function TextInput({
 }: ComponentPropsWithoutRef<"input"> & { label: string; error?: string }) {
   return (
     <label className="grid gap-2">
-      <span className="type-label">{label}</span>
+      <FieldLabel>{label}</FieldLabel>
       <input
         className={cx(
           "min-h-12 rounded-xs border-[3px] border-border bg-surface-raised px-3 font-mono text-sm text-foreground shadow-hard-sm outline-none placeholder:text-muted focus:shadow-hard focus:ring-[3px] focus:ring-info",
