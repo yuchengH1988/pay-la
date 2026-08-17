@@ -95,6 +95,15 @@ service cloud.firestore {
       return /databases/$(database)/documents/groups/$(groupId);
     }
 
+    function groupData(groupId) {
+      return get(groupPath(groupId)).data;
+    }
+
+    function isGroupMemberById(groupId) {
+      return isSignedIn()
+        && request.auth.uid in groupData(groupId).memberIds;
+    }
+
     function hasValidInvitationCreateShape() {
       let group = get(groupPath(request.resource.data.groupId)).data;
 
@@ -187,8 +196,83 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp;
     }
 
+    function isValidExpenseCategory(category) {
+      return category in [
+        'food',
+        'groceries',
+        'transport',
+        'housing',
+        'utilities',
+        'entertainment',
+        'shopping',
+        'travel',
+        'health',
+        'education',
+        'subscriptions',
+        'pets',
+        'gifts',
+        'insurance',
+        'other'
+      ];
+    }
+
+    function isValidSplitType(splitType) {
+      return splitType in ['equal', 'exact', 'percentage'];
+    }
+
+    function hasValidExpenseShape(groupId) {
+      let group = groupData(groupId);
+
+      return request.resource.data.keys().hasOnly([
+        'name',
+        'amountMinor',
+        'amountScale',
+        'category',
+        'paidBy',
+        'participants',
+        'splitType',
+        'date',
+        'note',
+        'createdBy',
+        'createdAt',
+        'updatedAt'
+      ])
+      && request.resource.data.keys().hasAll([
+        'name',
+        'amountMinor',
+        'amountScale',
+        'category',
+        'paidBy',
+        'participants',
+        'splitType',
+        'date',
+        'note',
+        'createdBy',
+        'createdAt',
+        'updatedAt'
+      ])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() > 0
+      && request.resource.data.name.size() <= 100
+      && request.resource.data.amountMinor is int
+      && request.resource.data.amountMinor > 0
+      && request.resource.data.amountScale == 2
+      && isValidExpenseCategory(request.resource.data.category)
+      && request.resource.data.paidBy in group.memberIds
+      && request.resource.data.participants is map
+      && request.resource.data.participants.keys().size() >= 1
+      && request.resource.data.participants.keys().hasOnly(group.memberIds)
+      && isValidSplitType(request.resource.data.splitType)
+      && request.resource.data.date is timestamp
+      && request.resource.data.note is string
+      && request.resource.data.note.size() <= 500
+      && request.resource.data.createdBy is string
+      && request.resource.data.createdAt is timestamp
+      && request.resource.data.updatedAt is timestamp;
+    }
+
     match /users/{uid} {
-      allow read: if isOwnUserDocument(uid);
+      allow read: if isSignedIn();
 
       allow create: if isOwnUserDocument(uid)
         && hasValidUserProfileCreateShape();
@@ -238,6 +322,21 @@ service cloud.firestore {
       allow update: if hasValidInvitationUseShape(invitationId);
 
       allow delete: if false;
+    }
+
+    match /groups/{groupId}/expenses/{expenseId} {
+      allow read: if isGroupMemberById(groupId);
+
+      allow create: if isGroupMemberById(groupId)
+        && hasValidExpenseShape(groupId)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isGroupMemberById(groupId)
+        && hasValidExpenseShape(groupId)
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isGroupMemberById(groupId);
     }
 
     match /{document=**} {

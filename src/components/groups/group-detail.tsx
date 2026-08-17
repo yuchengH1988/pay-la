@@ -13,8 +13,11 @@ import {
   ThemeToggle,
 } from "@/src/components/ui";
 import { useGroup } from "@/src/hooks/use-group";
+import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateGroup } from "@/src/services/groups";
 import { signOut } from "@/src/services/auth";
+import { CreateExpensePanel, ExpenseHistory } from "@/src/components/expenses";
+import { formatMemberLabel } from "@/src/utils/member-label";
 import { GroupForm } from "./group-form";
 import { InvitationPanel } from "./invitation-panel";
 
@@ -26,14 +29,6 @@ function getErrorMessage(error: unknown) {
   return "Something went wrong. Please try again.";
 }
 
-function formatMemberLabel(memberId: string, currentUserId: string) {
-  if (memberId === currentUserId) {
-    return "You";
-  }
-
-  return `${memberId.slice(0, 8)}...${memberId.slice(-4)}`;
-}
-
 export function GroupDetail({
   groupId,
   user,
@@ -42,7 +37,9 @@ export function GroupDetail({
   user: User;
 }) {
   const { group, loading, error } = useGroup(groupId);
+  const { profiles, error: profilesError } = useUserProfiles(group?.memberIds ?? []);
   const [isEditing, setIsEditing] = useState(false);
+  const [expenseHistoryVersion, setExpenseHistoryVersion] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -141,14 +138,21 @@ export function GroupDetail({
                 </div>
               </Frame>
 
-              <Frame surface="surface" dashed className="p-6 text-center">
-                <div className="diagonal-stripes mx-auto mb-4 h-12 w-24 border-[3px] border-border bg-accent" />
-                <h2 className="type-h2">Expenses arrive next</h2>
-                <p className="type-small mx-auto mt-2 max-w-md text-muted">
-                  Phase 3 stores group invitations and membership. Expense,
-                  balance, and settlement workflows start in later phases.
-                </p>
-              </Frame>
+              <CreateExpensePanel
+                group={group}
+                currentUserId={user.uid}
+                memberProfiles={profiles}
+                onCreated={() =>
+                  setExpenseHistoryVersion((currentVersion) => currentVersion + 1)
+                }
+              />
+
+              <ExpenseHistory
+                key={expenseHistoryVersion}
+                group={group}
+                currentUserId={user.uid}
+                memberProfiles={profiles}
+              />
             </div>
 
             <div className="grid content-start gap-5">
@@ -164,7 +168,7 @@ export function GroupDetail({
                       className="flex items-center justify-between gap-3 border-[3px] border-border bg-surface-raised p-3 shadow-hard-sm"
                     >
                       <span className="type-small min-w-0 truncate">
-                        {formatMemberLabel(memberId, user.uid)}
+                        {formatMemberLabel(memberId, user.uid, profiles)}
                       </span>
                       {memberId === group.createdBy ? (
                         <Badge tone="primary">Created</Badge>
@@ -222,9 +226,9 @@ export function GroupDetail({
           </Frame>
         )}
 
-        {error || actionError ? (
+        {error || profilesError || actionError ? (
           <Alert title="Group error" tone="danger">
-            {error || actionError}
+            {error || profilesError || actionError}
           </Alert>
         ) : null}
       </div>
