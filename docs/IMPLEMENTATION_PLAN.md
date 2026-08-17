@@ -32,6 +32,11 @@ Complete one phase at a time. Do not implement future phases unless required by 
 - GitHub Pages
 - Custom Domain
 
+### Package Management
+
+- Yarn
+- Do not mix npm and Yarn lockfiles
+
 The application must remain compatible with Next.js static export.
 
 ---
@@ -162,7 +167,9 @@ Implement expense persistence and management.
 
 `groups/{groupId}/expenses/{expenseId}`
 
-Store the resolved participant shares with the Expense.
+Expense amounts use the project's integer / smallest-unit money representation.
+Store resolved participant shares with the Expense.
+Changing a Group currency changes only the currency label and never converts existing amounts.
 
 ### Done When
 
@@ -191,7 +198,9 @@ They must handle:
 - Smallest currency-unit differences
 - Participant totals
 
+Money calculations must use the existing integer / smallest-unit representation.
 The final participant shares must always equal the Expense amount.
+Resolved shares are persisted with the Expense and must not be recalculated later by the Balance Engine.
 
 ### Testing
 
@@ -266,9 +275,9 @@ Members can record repayments and balances correctly reflect those repayments.
 
 ---
 
-# Phase 8 — Security Rules
+# Phase 8 — Security Hardening
 
-Finalize and test Firestore Security Rules before public release.
+Review, finalize, and test the Firestore Security Rules introduced throughout previous phases before public release.
 
 ### Core Requirements
 
@@ -284,6 +293,17 @@ Finalize and test Firestore Security Rules before public release.
 - Invitation consumption and Group membership update must be atomic
 
 Security must not rely on UI restrictions.
+
+### Tasks
+
+- Review all existing Firestore Security Rules
+- Remove temporary or overly permissive rules
+- Test authorized operations
+- Test unauthorized operations
+- Test cross-group access
+- Test malformed writes
+- Test invitation edge cases
+- Verify document field constraints where appropriate
 
 ### Done When
 
