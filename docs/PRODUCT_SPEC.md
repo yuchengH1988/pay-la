@@ -361,6 +361,35 @@ Amy
 
 是有效 Expense。
 
+### Payer and Split Responsibility
+
+`paidBy` 與 Split responsibility 是兩個獨立概念。
+
+付款者不一定需要負擔該筆 Expense。
+
+例如：
+
+```text
+Calvin pays NT$600
+
+Harry is responsible for NT$600
+```
+
+也是有效 Expense。
+
+另一個有效例子：
+
+```text
+Calvin pays NT$600
+
+Calvin is responsible for 20%
+Harry is responsible for 80%
+```
+
+`paidBy` 只記錄誰支付了原始 Expense。
+
+Resolved participant shares 記錄誰實際負擔該筆 Expense，以及各自負擔多少。
+
 Multiple Payers 不屬於 MVP。
 
 ---
@@ -461,6 +490,16 @@ Group Member 可以查看 Group 的 Expense History。
 ## 5.1 Split Methods
 
 MVP 支援三種 Split Method：
+
+- Equal — 將 Expense 平均分給選取的 Participants
+- Exact Amount — 為每位選取的 Participant 指定確切金額
+- Percentage — 為每位選取的 Participant 指定百分比
+
+Exact Amount split 中，所有 Participant amount 加總必須等於 Expense amount。
+
+Percentage split 中，所有 Participant percentage 加總必須等於 100%。
+
+編輯過程中可以顯示尚未完整分配的狀態，但 invalid split 不能儲存。
 
 ### Equal
 

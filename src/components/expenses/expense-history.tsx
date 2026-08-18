@@ -128,6 +128,15 @@ export function ExpenseHistory({
                     <p className="type-small mt-1 text-muted">
                       {Object.keys(expense.participants).length} participants
                     </p>
+                    {expense.participants[currentUserId] ? (
+                      <p className="type-small mt-1 text-muted">
+                        Your share{" "}
+                        {formatAmountFromMinor(
+                          expense.participants[currentUserId].resolvedAmountMinor,
+                          group.currency,
+                        )}
+                      </p>
+                    ) : null}
                     {expense.note ? (
                       <p className="type-small mt-2 text-muted">{expense.note}</p>
                     ) : null}

@@ -197,6 +197,7 @@ They must handle:
 - Rounding
 - Smallest currency-unit differences
 - Participant totals
+- Payer selection and participant split responsibility are independent.
 
 Money calculations must use the existing integer / smallest-unit representation.
 The final participant shares must always equal the Expense amount.
@@ -230,48 +231,86 @@ Balance is derived from:
 
 Do not create Balance as an independent source of truth.
 
+Phase 6 implements the calculation model only.
+Settlement inputs may be represented by test data at this stage.
+
+Do not implement Settlement persistence, CRUD, or UI in this phase. Those belong to Phase 7.
+
 ### Tasks
 
-- Calculate member net balances
-- Calculate current user's owed / owing totals
-- Generate member-to-member balances
-- Implement debt simplification
-- Integrate calculated balances into existing UI components
+* Calculate member net balances
+* Calculate current user's owed / owing totals
+* Generate member-to-member balances
+* Implement debt simplification
+* Integrate calculated balances into existing balance UI components
+
+### Requirements
+
+* Balance calculations must be deterministic
+* Use persisted resolved Expense shares
+* Do not recalculate historical Split logic
+* Balance must always be derived from financial events
+* Do not persist a separate Balance collection
 
 ### Testing
 
 Add automated tests for:
 
-- Multiple payers across multiple expenses
-- Partial participation
-- Settlements
-- Fully settled Groups
-- Debt simplification
+* Multiple payers across multiple expenses
+* Partial participation
+* Uneven resolved shares
+* Settlement inputs
+* Fully settled Groups
+* Debt simplification
+* Deterministic results
 
 ### Done When
 
-The same Expense and Settlement history always produces the same Balance result.
+The same Expense and Settlement history always produces the same Balance result, and all Balance Engine tests pass.
 
 ---
 
 # Phase 7 — Settlements
 
-Implement repayment records.
+Implement persisted repayment records and integrate them with the existing Balance Engine.
 
 ### Tasks
 
-- Create Settlement
-- Settlement history
-- Update Balance calculations after settlement
-- Integrate settlement suggestions
+* Create Settlement
+* Settlement history
+* Validate payer, receiver, and amount
+* Persist Settlement records
+* Recalculate derived Balance after Settlement changes
+* Integrate settlement suggestions
+* Add required loading, empty, error, and confirmation states
+* Add the minimum Firestore Security Rules required for Settlements
 
 ### Data
 
 `groups/{groupId}/settlements/{settlementId}`
 
+### Requirements
+
+* Payer and receiver must be Group members
+* Payer and receiver cannot be the same user
+* Amount must be greater than zero
+* Settlement records must not directly mutate Expense data
+* Balance remains derived from Expenses + Settlements
+
+### Testing
+
+Test:
+
+* Full repayment
+* Partial repayment
+* Multiple Settlements
+* Invalid payer / receiver combinations
+* Balance after Settlement creation
+* Fully settled state
+
 ### Done When
 
-Members can record repayments and balances correctly reflect those repayments.
+Group members can record repayments, Settlement history is persisted correctly, and the Balance Engine reflects those repayments accurately.
 
 ---
 
@@ -279,79 +318,134 @@ Members can record repayments and balances correctly reflect those repayments.
 
 Review, finalize, and test the Firestore Security Rules introduced throughout previous phases before public release.
 
+This phase is a security review and hardening pass, not the first implementation of Security Rules.
+
 ### Core Requirements
 
-- Unauthenticated users cannot access private application data
-- Group members have equal Group permissions
-- Non-members cannot access Group data
-- Groups cannot exceed 30 members
-- Only Group members can create invitations
-- Full Groups cannot create usable invitations
-- Invitations expire according to product rules
-- Invitations are single-use
-- Invitation acceptance can only add the authenticated user
-- Invitation consumption and Group membership update must be atomic
+* Unauthenticated users cannot access private application data
+* Users can only modify permitted user-profile data
+* Group members have equal Group permissions
+* Non-members cannot access Group data
+* Groups cannot exceed 30 members
+* Expense writes follow the established Group and participant rules
+* Settlement writes follow the established Group rules
+* Only Group members can create invitations
+* Full Groups cannot create usable invitations
+* Invitations expire according to product rules
+* Invitations are single-use
+* Invitation acceptance can only add the authenticated user
+* Invitation consumption and Group membership update must be atomic
 
 Security must not rely on UI restrictions.
 
 ### Tasks
 
-- Review all existing Firestore Security Rules
-- Remove temporary or overly permissive rules
-- Test authorized operations
-- Test unauthorized operations
-- Test cross-group access
-- Test malformed writes
-- Test invitation edge cases
-- Verify document field constraints where appropriate
+* Review all existing Firestore Security Rules
+* Remove temporary or overly permissive rules
+* Test authenticated and unauthenticated access
+* Test member and non-member access
+* Test cross-group access
+* Test malformed writes
+* Test Group member limit
+* Test Expense field validation
+* Test Settlement field validation
+* Test Invitation edge cases
+* Verify document field constraints where appropriate
+* Verify no client-side restriction is being treated as a security boundary
 
 ### Done When
 
-Authorized operations succeed and unauthorized operations fail when tested against Firestore Rules.
+Authorized operations succeed, unauthorized operations fail, and the main security invariants are verified against Firestore Rules.
 
 ---
 
-# Phase 9 — Product Integration
+# Phase 9 — Product Polish & UX
 
-Complete the MVP experience using the established Design System.
+Review and refine the complete MVP experience after all core product flows are functional.
+
+This phase focuses on usability, visual consistency, responsiveness, and end-to-end product quality. It should not change established financial or product rules without updating the relevant specification first.
+
+### Goals
+
+* Improve end-to-end user flow
+* Reduce unnecessary interaction steps
+* Improve information hierarchy
+* Refine responsive layouts
+* Improve consistency across product screens
+* Remove remaining development placeholders
 
 ### Tasks
 
-- Connect existing UI components to real data
-- Replace remaining mock data
-- Complete loading states
-- Complete empty states
-- Complete error states
-- Verify Light / Dark mode
-- Verify mobile, tablet, and desktop layouts
-- Complete Traditional Chinese / English support
-- Accessibility review
+* Review the complete Authentication → Group → Expense → Balance → Settlement flow
+* Refine navigation and page hierarchy
+* Improve Create / Edit Expense interaction
+* Improve Split interaction
+* Improve Balance presentation
+* Improve Settle Up flow
+* Review forms, dialogs, confirmations, and destructive actions
+* Replace remaining mock or placeholder content
+* Complete loading states
+* Complete empty states
+* Complete error states
+* Complete disabled / pending states
+* Verify Light / Dark mode
+* Refine mobile, tablet, and desktop layouts
+* Complete Traditional Chinese / English support
+* Accessibility review
+* Review focus states and touch targets
+* Remove duplicated or obsolete UI
+* Review component consistency against `/ui`
+* Run an end-to-end manual UX pass
 
 ### Done When
 
-The complete MVP flow can be performed without mock data.
+The complete MVP can be used naturally from sign-in through shared expense settlement without mock data, broken flows, inconsistent UI, or unnecessary friction.
 
 ---
 
 # Phase 10 — Deployment
 
-Prepare the application for public deployment.
+Prepare and release the application through GitHub Pages.
 
 ### Tasks
 
-- Configure Next.js static export
-- Configure GitHub Actions
-- Deploy to GitHub Pages
-- Configure Firebase Authorized Domains
-- Configure Custom Domain
-- Verify Google Sign-In on the production domain
-- Review production Firestore Rules
-- Configure Firebase App Check
-- Run final production build and QA
+* Verify Next.js static export configuration
+* Configure GitHub Actions for build and deployment
+* Deploy the production static build to GitHub Pages
+* Configure Firebase Authorized Domains
+* Configure Custom Domain
+* Configure DNS
+* Verify HTTPS
+* Verify Google Sign-In on the production domain
+* Verify Firestore access against production Security Rules
+* Configure Firebase App Check
+* Verify production environment variables
+* Run final production build
+* Run production smoke tests
+* Verify mobile and desktop production behavior
+* Verify Light / Dark mode in production
+* Verify invitation links using the production domain
+
+### Production Smoke Test
+
+At minimum verify:
+
+1. Google Sign-In
+2. Create Group
+3. Generate Invitation
+4. Join Group with another account
+5. Create Expense
+6. Split Expense
+7. View Balance
+8. Create Settlement
+9. Reach settled state
+10. Sign Out
+11. Refresh and direct-route navigation
+12. Unauthorized access is rejected
 
 ### Done When
 
-Pay La is accessible through the production custom domain and the complete MVP flow works against the production Firebase project.
+Pay La is accessible through the production custom domain and the complete MVP flow works correctly against the production Firebase project.
 
 ---
 
@@ -363,8 +457,9 @@ For each phase:
 2. Inspect the existing implementation.
 3. Implement only the current phase.
 4. Add tests where business logic warrants them.
-5. Run relevant verification.
-6. Report completed work and remaining issues.
-7. Stop before starting the next phase.
+5. Add or update the minimum Security Rules required by the feature.
+6. Run relevant verification.
+7. Report completed work and remaining issues.
+8. Stop before starting the next phase.
 
 Do not implement future features simply because they are adjacent to the current task.

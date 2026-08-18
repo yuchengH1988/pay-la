@@ -6,7 +6,13 @@ import {
   expenseCategoryLabels,
 } from "@/src/constants/expense-categories";
 import { Button, FieldLabel, SelectField, TextInput } from "@/src/components/ui";
-import { formatDateForInput, parseAmountToMinor } from "@/src/services/expenses";
+import { calculateSplit, type SplitErrorCode } from "@/src/lib/split-engine";
+import {
+  formatDateForInput,
+  parseAmountToMinor,
+  parseNonNegativeAmountToMinor,
+  parsePercentageToBasisPoints,
+} from "@/src/services/expenses";
 import type { Expense, ExpenseFormValues, SplitType } from "@/src/types/expense";
 import type { Group } from "@/src/types/group";
 import type { UserProfileMap } from "@/src/types/user-profile";
@@ -20,6 +26,46 @@ const splitTypes: Array<{ value: SplitType; label: string }> = [
 
 type ExpenseFormErrors = Partial<Record<keyof ExpenseFormValues, string>>;
 
+type SplitSummary =
+  | {
+      type: "equal";
+      shares: Array<{ userId: string; resolvedAmountMinor: number }>;
+    }
+  | {
+      type: "exact";
+      assignedMinor: number;
+      remainingMinor: number | null;
+    }
+  | {
+      type: "percentage";
+      assignedBasisPoints: number;
+      remainingBasisPoints: number;
+    };
+
+const splitErrorMessages: Record<SplitErrorCode, string> = {
+  invalid_amount: "Amount must be greater than 0 with up to 2 decimals.",
+  no_participants: "Choose at least one participant.",
+  duplicate_participant: "Each participant can only appear once.",
+  invalid_exact_amount: "Exact amounts must be zero or greater.",
+  exact_total_mismatch: "Exact amounts must add up to the expense amount.",
+  invalid_percentage: "Percentages must be between 0 and 100.",
+  percentage_total_mismatch: "Percentages must add up to 100%.",
+};
+
+function formatMinorAmount(amountMinor: number) {
+  return (amountMinor / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatBasisPoints(basisPoints: number) {
+  return `${(basisPoints / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}%`;
+}
+
 function expenseToFormValues(expense: Expense): ExpenseFormValues {
   return {
     name: expense.name,
@@ -28,6 +74,22 @@ function expenseToFormValues(expense: Expense): ExpenseFormValues {
     paidBy: expense.paidBy,
     participantIds: Object.keys(expense.participants),
     splitType: expense.splitType,
+    exactAmounts: Object.fromEntries(
+      Object.entries(expense.participants).map(([userId, share]) => [
+        userId,
+        share.exactAmountMinor === null
+          ? ""
+          : (share.exactAmountMinor / 100).toFixed(2),
+      ]),
+    ),
+    percentages: Object.fromEntries(
+      Object.entries(expense.participants).map(([userId, share]) => [
+        userId,
+        share.percentageBasisPoints === null
+          ? ""
+          : (share.percentageBasisPoints / 100).toFixed(2),
+      ]),
+    ),
     date: formatDateForInput(expense.date.toDate()),
     note: expense.note,
   };
@@ -70,7 +132,108 @@ function validateExpenseForm(values: ExpenseFormValues, group: Group) {
     errors.note = "Keep the note under 500 characters.";
   }
 
+  const amountMinor = parseAmountToMinor(values.amount);
+
+  if (amountMinor) {
+    const splitResult = calculateSplit({
+      amountMinor,
+      splitType: values.splitType,
+      participants: values.participantIds.map((userId) => {
+        if (values.splitType === "exact") {
+          return {
+            userId,
+            exactAmountMinor: parseNonNegativeAmountToMinor(
+              values.exactAmounts[userId] ?? "",
+            ),
+          };
+        }
+
+        if (values.splitType === "percentage") {
+          return {
+            userId,
+            percentageBasisPoints: parsePercentageToBasisPoints(
+              values.percentages[userId] ?? "",
+            ),
+          };
+        }
+
+        return { userId };
+      }),
+    });
+
+    if (!splitResult.ok) {
+      const splitMessage = splitResult.errors.map(
+        (errorCode) => splitErrorMessages[errorCode],
+      )[0];
+
+      if (
+        splitResult.errors.includes("invalid_exact_amount") ||
+        splitResult.errors.includes("exact_total_mismatch") ||
+        splitResult.errors.includes("invalid_percentage") ||
+        splitResult.errors.includes("percentage_total_mismatch")
+      ) {
+        errors.splitType = splitMessage;
+      }
+    }
+  }
+
   return errors;
+}
+
+function getSplitSummary(values: ExpenseFormValues): SplitSummary {
+  const amountMinor = parseAmountToMinor(values.amount);
+
+  if (values.splitType === "equal") {
+    if (!amountMinor || values.participantIds.length === 0) {
+      return { type: "equal", shares: [] };
+    }
+
+    const splitResult = calculateSplit({
+      amountMinor,
+      splitType: "equal",
+      participants: values.participantIds.map((userId) => ({ userId })),
+    });
+
+    return {
+      type: "equal",
+      shares: splitResult.ok
+        ? splitResult.shares.map((share) => ({
+            userId: share.userId,
+            resolvedAmountMinor: share.resolvedAmountMinor,
+          }))
+        : [],
+    };
+  }
+
+  if (values.splitType === "exact") {
+    const assignedMinor = values.participantIds.reduce((total, userId) => {
+      const exactAmountMinor = parseNonNegativeAmountToMinor(
+        values.exactAmounts[userId] ?? "",
+      );
+
+      return total + (exactAmountMinor ?? 0);
+    }, 0);
+
+    return {
+      type: "exact",
+      assignedMinor,
+      remainingMinor: amountMinor === null ? null : amountMinor - assignedMinor,
+    };
+  }
+
+  const assignedBasisPoints = values.participantIds.reduce((total, userId) => {
+    const percentageBasisPoints = parsePercentageToBasisPoints(
+      values.percentages[userId] ?? "",
+    );
+
+    return total + (percentageBasisPoints ?? 0);
+  }, 0);
+
+  return {
+    type: "percentage",
+    assignedBasisPoints,
+    remainingBasisPoints: 10_000 - assignedBasisPoints,
+  };
 }
 
 export function ExpenseForm({
@@ -102,13 +265,30 @@ export function ExpenseForm({
           paidBy: currentUserId,
           participantIds: [currentUserId],
           splitType: "equal",
+          exactAmounts: {},
+          percentages: {},
           date: formatDateForInput(),
           note: "",
         },
   );
   const [errors, setErrors] = useState<ExpenseFormErrors>({});
+  const splitSummary = getSplitSummary(values);
+
+  function clearSplitError() {
+    setErrors((current) => {
+      if (!current.splitType) {
+        return current;
+      }
+
+      const remainingErrors = { ...current };
+
+      delete remainingErrors.splitType;
+      return remainingErrors;
+    });
+  }
 
   function toggleParticipant(memberId: string) {
+    clearSplitError();
     setValues((current) => {
       const isSelected = current.participantIds.includes(memberId);
       const participantIds = isSelected
@@ -156,9 +336,10 @@ export function ExpenseForm({
         error={errors.amount}
         inputMode="decimal"
         placeholder="1200.00"
-        onChange={(event) =>
-          setValues((current) => ({ ...current, amount: event.target.value }))
-        }
+        onChange={(event) => {
+          clearSplitError();
+          setValues((current) => ({ ...current, amount: event.target.value }));
+        }}
       />
       <SelectField
         label="Category"
@@ -219,12 +400,13 @@ export function ExpenseForm({
       <SelectField
         label="Split method"
         value={values.splitType}
-        onChange={(event) =>
+        onChange={(event) => {
+          clearSplitError();
           setValues((current) => ({
             ...current,
             splitType: event.target.value as SplitType,
-          }))
-        }
+          }));
+        }}
       >
         {splitTypes.map((splitType) => (
           <option key={splitType.value} value={splitType.value}>
@@ -232,6 +414,119 @@ export function ExpenseForm({
           </option>
         ))}
       </SelectField>
+      {errors.splitType ? (
+        <p className="type-small text-danger">{errors.splitType}</p>
+      ) : null}
+
+      {values.splitType === "exact" ? (
+        <div className="grid gap-2">
+          <FieldLabel>Exact amounts</FieldLabel>
+          <div className="grid gap-2">
+            {values.participantIds.map((memberId) => (
+              <label
+                key={memberId}
+                className="grid min-h-12 grid-cols-[minmax(0,1fr)_8rem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
+              >
+                <span className="type-small min-w-0 truncate">
+                  {formatMemberLabel(memberId, currentUserId, memberProfiles)}
+                </span>
+                <input
+                  value={values.exactAmounts[memberId] ?? ""}
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  className="min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
+                  onChange={(event) => {
+                    clearSplitError();
+                    setValues((current) => ({
+                      ...current,
+                      exactAmounts: {
+                        ...current.exactAmounts,
+                        [memberId]: event.target.value,
+                      },
+                    }));
+                  }}
+                />
+              </label>
+            ))}
+          </div>
+          {splitSummary.type === "exact" ? (
+            <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+              <p className="type-small">
+                Assigned: {group.currency} {formatMinorAmount(splitSummary.assignedMinor)}
+              </p>
+              <p className="type-small">
+                Remaining:{" "}
+                {splitSummary.remainingMinor === null
+                  ? "-"
+                  : `${group.currency} ${formatMinorAmount(splitSummary.remainingMinor)}`}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {values.splitType === "percentage" ? (
+        <div className="grid gap-2">
+          <FieldLabel>Percentages</FieldLabel>
+          <div className="grid gap-2">
+            {values.participantIds.map((memberId) => (
+              <label
+                key={memberId}
+                className="grid min-h-12 grid-cols-[minmax(0,1fr)_8rem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
+              >
+                <span className="type-small min-w-0 truncate">
+                  {formatMemberLabel(memberId, currentUserId, memberProfiles)}
+                </span>
+                <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                  <input
+                    value={values.percentages[memberId] ?? ""}
+                    inputMode="decimal"
+                    placeholder="50"
+                    className="min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
+                    onChange={(event) => {
+                      clearSplitError();
+                      setValues((current) => ({
+                        ...current,
+                        percentages: {
+                          ...current.percentages,
+                          [memberId]: event.target.value,
+                        },
+                      }));
+                    }}
+                  />
+                  <span className="type-small">%</span>
+                </div>
+              </label>
+            ))}
+          </div>
+          {splitSummary.type === "percentage" ? (
+            <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+              <p className="type-small">
+                Assigned: {formatBasisPoints(splitSummary.assignedBasisPoints)}
+              </p>
+              <p className="type-small">
+                Remaining: {formatBasisPoints(splitSummary.remainingBasisPoints)}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {splitSummary.type === "equal" && splitSummary.shares.length > 0 ? (
+        <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+          <FieldLabel>Equal shares</FieldLabel>
+          {splitSummary.shares.map((share) => (
+            <p key={share.userId} className="type-small flex justify-between gap-3">
+              <span className="min-w-0 truncate">
+                {formatMemberLabel(share.userId, currentUserId, memberProfiles)}
+              </span>
+              <span>
+                {group.currency} {formatMinorAmount(share.resolvedAmountMinor)}
+              </span>
+            </p>
+          ))}
+        </div>
+      ) : null}
 
       <TextInput
         label="Date"

@@ -1,13 +1,14 @@
 import type { Timestamp } from "firebase/firestore";
 import type { ExpenseCategory } from "@/src/constants/expense-categories";
+import type { SplitType } from "@/src/lib/split-engine";
 
-export type SplitType = "equal" | "exact" | "percentage";
+export type { SplitType };
 
 export type ExpenseParticipantShare = {
   userId: string;
-  resolvedAmountMinor: number | null;
+  resolvedAmountMinor: number;
   exactAmountMinor: number | null;
-  percentage: number | null;
+  percentageBasisPoints: number | null;
 };
 
 export type ExpenseParticipants = Record<string, ExpenseParticipantShare>;
@@ -35,6 +36,8 @@ export type ExpenseFormValues = {
   paidBy: string;
   participantIds: string[];
   splitType: SplitType;
+  exactAmounts: Record<string, string>;
+  percentages: Record<string, string>;
   date: string;
   note: string;
 };

@@ -14,14 +14,32 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { firestore } from "@/src/lib/firebase";
+import {
+  calculateSplit,
+  type SplitErrorCode,
+  type SplitParticipantInput,
+} from "@/src/lib/split-engine";
 import type {
   Expense,
   ExpenseFormValues,
-  ExpenseParticipantShare,
   ExpenseParticipants,
 } from "@/src/types/expense";
 
+export class ExpenseSplitValidationError extends Error {
+  constructor(public readonly codes: SplitErrorCode[]) {
+    super("Expense split validation failed.");
+  }
+}
+
 export function parseAmountToMinor(amount: string) {
+  return parseMinorAmount(amount, { allowZero: false });
+}
+
+export function parseNonNegativeAmountToMinor(amount: string) {
+  return parseMinorAmount(amount, { allowZero: true });
+}
+
+function parseMinorAmount(amount: string, { allowZero }: { allowZero: boolean }) {
   const trimmedAmount = amount.trim();
 
   if (!/^\d+(\.\d{1,2})?$/.test(trimmedAmount)) {
@@ -31,8 +49,23 @@ export function parseAmountToMinor(amount: string) {
   const [major, minor = ""] = trimmedAmount.split(".");
   const amountMinor = Number(major) * 100 + Number(minor.padEnd(2, "0"));
 
-  return Number.isSafeInteger(amountMinor) && amountMinor > 0
+  return Number.isSafeInteger(amountMinor) && (allowZero ? amountMinor >= 0 : amountMinor > 0)
     ? amountMinor
+    : null;
+}
+
+export function parsePercentageToBasisPoints(percentage: string) {
+  const trimmedPercentage = percentage.trim();
+
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmedPercentage)) {
+    return null;
+  }
+
+  const [whole, decimal = ""] = trimmedPercentage.split(".");
+  const basisPoints = Number(whole) * 100 + Number(decimal.padEnd(2, "0"));
+
+  return Number.isSafeInteger(basisPoints) && basisPoints >= 0
+    ? basisPoints
     : null;
 }
 
@@ -75,22 +108,6 @@ function toExpense(snapshot: QueryDocumentSnapshot<DocumentData>): Expense {
   };
 }
 
-function buildParticipants(participantIds: string[]): ExpenseParticipants {
-  return participantIds.reduce<ExpenseParticipants>((participants, userId) => {
-    const share: ExpenseParticipantShare = {
-      userId,
-      resolvedAmountMinor: null,
-      exactAmountMinor: null,
-      percentage: null,
-    };
-
-    return {
-      ...participants,
-      [userId]: share,
-    };
-  }, {});
-}
-
 function buildExpensePayload(values: ExpenseFormValues) {
   const amountMinor = parseAmountToMinor(values.amount);
 
@@ -98,13 +115,50 @@ function buildExpensePayload(values: ExpenseFormValues) {
     throw new Error("Amount must be greater than 0.");
   }
 
+  const splitParticipants = values.participantIds.map<SplitParticipantInput>((userId) => {
+    if (values.splitType === "exact") {
+      return {
+        userId,
+        exactAmountMinor: parseNonNegativeAmountToMinor(values.exactAmounts[userId] ?? ""),
+      };
+    }
+
+    if (values.splitType === "percentage") {
+      return {
+        userId,
+        percentageBasisPoints: parsePercentageToBasisPoints(
+          values.percentages[userId] ?? "",
+        ),
+      };
+    }
+
+    return { userId };
+  });
+  const splitResult = calculateSplit({
+    amountMinor,
+    splitType: values.splitType,
+    participants: splitParticipants,
+  });
+
+  if (!splitResult.ok) {
+    throw new ExpenseSplitValidationError(splitResult.errors);
+  }
+
+  const participants = splitResult.shares.reduce<ExpenseParticipants>(
+    (participantShares, share) => ({
+      ...participantShares,
+      [share.userId]: share,
+    }),
+    {},
+  );
+
   return {
     name: values.name.trim(),
     amountMinor,
     amountScale: 2,
     category: values.category,
     paidBy: values.paidBy,
-    participants: buildParticipants(values.participantIds),
+    participants,
     splitType: values.splitType,
     date: Timestamp.fromDate(new Date(`${values.date}T00:00:00`)),
     note: values.note.trim(),
