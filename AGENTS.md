@@ -23,8 +23,17 @@ Use the existing project stack:
 * TypeScript
 * App Router
 * Tailwind CSS
+* Firebase Authentication
+* Cloud Firestore
+* Firestore Security Rules
 
 Do not add dependencies unless necessary.
+
+## Package Management
+
+Use Yarn for all package and script commands.
+
+Do not use npm or create an npm lockfile.
 
 ## Working Rules
 
@@ -34,6 +43,9 @@ Do not add dependencies unless necessary.
 * Prefer simple code over premature abstractions.
 * Reuse existing components and utilities where appropriate.
 * Do not silently change established product behavior.
+* Keep Firebase initialization centralized.
+* Keep Firestore Security Rules in the repository.
+* Maintain Next.js static export and GitHub Pages compatibility.
 
 ## React
 
@@ -53,11 +65,15 @@ Do not add dependencies unless necessary.
 After meaningful changes, run the relevant checks when available:
 
 ```bash
-npm run lint
-npm run build
+yarn lint
+yarn build
 ```
 
 Run tests for business logic when applicable.
+
+```bash
+yarn test
+```
 
 Do not claim a change is complete if verification fails.
 

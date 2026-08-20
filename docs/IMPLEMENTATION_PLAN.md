@@ -314,7 +314,43 @@ Group members can record repayments, Settlement history is persisted correctly, 
 
 ---
 
-# Phase 8 — Security Hardening
+# Phase 8 — Internationalization
+
+Implement the MVP language support before the security hardening pass.
+
+Product language requirements are defined in `docs/PRODUCT_SPEC.md`.
+
+### Languages
+
+* Traditional Chinese (`zh-TW`)
+* English (`en`)
+
+### Tasks
+
+* Establish the i18n architecture
+* Add language selection where appropriate
+* Localize application UI text
+* Localize category labels
+* Localize validation messages
+* Localize loading, empty, success, and error states
+* Ensure persisted product data remains language-independent
+* Verify language switching does not modify Expenses, Balances, Settlements, Groups, or Invitations
+* Maintain Next.js static export compatibility
+
+### Requirements
+
+* Do not store translated labels in Firestore
+* Category keys remain stable and language-independent
+* Currency and amount values are not converted by language changes
+* Do not introduce server-only Next.js functionality
+
+### Done When
+
+The MVP can be used in Traditional Chinese and English, and switching language changes UI presentation without changing product data.
+
+---
+
+# Phase 9 — Security Hardening
 
 Review, finalize, and test the Firestore Security Rules introduced throughout previous phases before public release.
 
@@ -359,7 +395,7 @@ Authorized operations succeed, unauthorized operations fail, and the main securi
 
 ---
 
-# Phase 9 — Product Polish & UX
+# Phase 10 — Product Polish & UX
 
 Review and refine the complete MVP experience after all core product flows are functional.
 
@@ -390,7 +426,6 @@ This phase focuses on usability, visual consistency, responsiveness, and end-to-
 * Complete disabled / pending states
 * Verify Light / Dark mode
 * Refine mobile, tablet, and desktop layouts
-* Complete Traditional Chinese / English support
 * Accessibility review
 * Review focus states and touch targets
 * Remove duplicated or obsolete UI
@@ -403,7 +438,7 @@ The complete MVP can be used naturally from sign-in through shared expense settl
 
 ---
 
-# Phase 10 — Deployment
+# Phase 11 — Deployment
 
 Prepare and release the application through GitHub Pages.
 
