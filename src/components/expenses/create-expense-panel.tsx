@@ -52,7 +52,7 @@ export function CreateExpensePanel({
         <div>
           <h2 className="type-h3">Add Expense</h2>
           <p className="type-small mt-2 text-muted">
-            Store the expense now. Split calculations start in Phase 5.
+            Store the expense with resolved participant shares.
           </p>
         </div>
         <Button type="button" onClick={() => setIsOpen((current) => !current)}>

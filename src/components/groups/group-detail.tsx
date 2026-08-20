@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { User } from "firebase/auth";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Avatar,
@@ -17,6 +17,11 @@ import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateGroup } from "@/src/services/groups";
 import { signOut } from "@/src/services/auth";
 import { CreateExpensePanel, ExpenseHistory } from "@/src/components/expenses";
+import { GroupBalancePanel } from "@/src/components/balance";
+import { useExpenses } from "@/src/hooks/use-expenses";
+import { useSettlements } from "@/src/hooks/use-settlements";
+import { SettlementPanel } from "@/src/components/settlements";
+import type { SettlementFormValues } from "@/src/types/settlement";
 import { formatMemberLabel } from "@/src/utils/member-label";
 import { GroupForm } from "./group-form";
 import { InvitationPanel } from "./invitation-panel";
@@ -38,8 +43,19 @@ export function GroupDetail({
 }) {
   const { group, loading, error } = useGroup(groupId);
   const { profiles, error: profilesError } = useUserProfiles(group?.memberIds ?? []);
+  const {
+    expenses,
+    loading: expensesLoading,
+    error: expensesError,
+  } = useExpenses(group?.id ?? null);
+  const {
+    settlements,
+    loading: settlementsLoading,
+    error: settlementsError,
+  } = useSettlements(group?.id ?? null);
   const [isEditing, setIsEditing] = useState(false);
-  const [expenseHistoryVersion, setExpenseHistoryVersion] = useState(0);
+  const [settlementDraft, setSettlementDraft] =
+    useState<SettlementFormValues | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -70,6 +86,10 @@ export function GroupDetail({
       setIsSigningOut(false);
     }
   }
+
+  const handleSettlementDraftConsumed = useCallback(() => {
+    setSettlementDraft(null);
+  }, []);
 
   return (
     <main className="min-h-dvh bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
@@ -142,20 +162,40 @@ export function GroupDetail({
                 group={group}
                 currentUserId={user.uid}
                 memberProfiles={profiles}
-                onCreated={() =>
-                  setExpenseHistoryVersion((currentVersion) => currentVersion + 1)
-                }
               />
 
               <ExpenseHistory
-                key={expenseHistoryVersion}
                 group={group}
                 currentUserId={user.uid}
                 memberProfiles={profiles}
+                expenses={expenses}
+                settlements={settlements}
+                loading={expensesLoading}
+                error={expensesError}
               />
             </div>
 
             <div className="grid content-start gap-5">
+              <GroupBalancePanel
+                group={group}
+                currentUserId={user.uid}
+                memberProfiles={profiles}
+                expenses={expenses}
+                settlements={settlements}
+                onSettleUp={(values) => setSettlementDraft(values)}
+              />
+
+              <SettlementPanel
+                group={group}
+                currentUserId={user.uid}
+                memberProfiles={profiles}
+                settlements={settlements}
+                loading={settlementsLoading}
+                error={settlementsError}
+                draft={settlementDraft}
+                onDraftConsumed={handleSettlementDraftConsumed}
+              />
+
               <Frame as="section" className="p-5">
                 <h2 className="type-h3">Members</h2>
                 <p className="type-small mt-2 text-muted">

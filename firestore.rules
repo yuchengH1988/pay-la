@@ -271,6 +271,42 @@ service cloud.firestore {
       && request.resource.data.updatedAt is timestamp;
     }
 
+    function hasValidSettlementShape(groupId) {
+      let group = groupData(groupId);
+
+      return request.resource.data.keys().hasOnly([
+        'payerId',
+        'receiverId',
+        'amountMinor',
+        'amountScale',
+        'date',
+        'note',
+        'createdBy',
+        'createdAt'
+      ])
+      && request.resource.data.keys().hasAll([
+        'payerId',
+        'receiverId',
+        'amountMinor',
+        'amountScale',
+        'date',
+        'note',
+        'createdBy',
+        'createdAt'
+      ])
+      && request.resource.data.payerId in group.memberIds
+      && request.resource.data.receiverId in group.memberIds
+      && request.resource.data.payerId != request.resource.data.receiverId
+      && request.resource.data.amountMinor is int
+      && request.resource.data.amountMinor > 0
+      && request.resource.data.amountScale == 2
+      && request.resource.data.date is timestamp
+      && request.resource.data.note is string
+      && request.resource.data.note.size() <= 500
+      && request.resource.data.createdBy is string
+      && request.resource.data.createdAt is timestamp;
+    }
+
     match /users/{uid} {
       allow read: if isSignedIn();
 
@@ -337,6 +373,16 @@ service cloud.firestore {
         && request.resource.data.createdAt == resource.data.createdAt;
 
       allow delete: if isGroupMemberById(groupId);
+    }
+
+    match /groups/{groupId}/settlements/{settlementId} {
+      allow read: if isGroupMemberById(groupId);
+
+      allow create: if isGroupMemberById(groupId)
+        && hasValidSettlementShape(groupId)
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update, delete: if false;
     }
 
     match /{document=**} {
