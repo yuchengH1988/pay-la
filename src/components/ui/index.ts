@@ -3,6 +3,7 @@ export { Avatar } from "./avatar";
 export { Badge } from "./badge";
 export { Button } from "./button";
 export { CheckboxRow } from "./checkbox-row";
+export { Dialog } from "./dialog";
 export { DialogMock } from "./dialog-mock";
 export { EmptyState } from "./empty-state";
 export { FieldLabel } from "./field-label";

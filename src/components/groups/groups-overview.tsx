@@ -8,6 +8,7 @@ import {
   Avatar,
   Badge,
   Button,
+  Dialog,
   Frame,
   LoadingCard,
   ThemeToggle,
@@ -106,7 +107,7 @@ export function GroupsOverview({ user }: { user: User }) {
           </div>
         </header>
 
-        <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
+        <section className="grid gap-5">
           <div className="grid gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -171,32 +172,20 @@ export function GroupsOverview({ user }: { user: User }) {
             )}
           </div>
 
-          <Frame as="aside" className="p-5">
-            <h2 className="type-h3">Create Group</h2>
-            <p className="type-small mt-2 text-muted">
-              The creator is recorded, but all members have the same group
-              permissions.
-            </p>
-            <div className="mt-5">
-              {showCreateForm || groups.length === 0 ? (
-                <GroupForm
-                  submitLabel="Create Group"
-                  loading={isCreating}
-                  onSubmit={handleCreateGroup}
-                />
-              ) : (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => setShowCreateForm(true)}
-                >
-                  New Group
-                </Button>
-              )}
-            </div>
-          </Frame>
         </section>
+
+        <Dialog
+          open={showCreateForm}
+          title="Create Group"
+          description="The creator is recorded, but all members have the same group permissions."
+          onClose={() => setShowCreateForm(false)}
+        >
+          <GroupForm
+            submitLabel="Create Group"
+            loading={isCreating}
+            onSubmit={handleCreateGroup}
+          />
+        </Dialog>
 
         {error || actionError ? (
           <Alert title="Groups error" tone="danger">
