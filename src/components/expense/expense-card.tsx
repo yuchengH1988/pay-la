@@ -22,7 +22,7 @@ export function ExpenseCard({
   return (
     <article className="grid grid-cols-[1fr_auto] gap-4 border-b-[3px] border-border bg-surface px-1 py-4">
       <div className="min-w-0">
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-2 items-center">
           <Badge tone="accent">{category}</Badge>
           <span className="type-caption text-muted">{date}</span>
         </div>

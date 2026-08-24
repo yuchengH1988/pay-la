@@ -546,8 +546,8 @@ function createLogoSketch(
         return 1;
       }
 
-      const scaleX = (p.width * 0.72) / logoBounds.width;
-      const scaleY = (p.height * 0.78) / logoBounds.height;
+      const scaleX = (p.width * 0.9) / logoBounds.width;
+      const scaleY = (p.height * 0.975) / logoBounds.height;
 
       return Math.min(LOGO.maxScale, Math.max(LOGO.minScale, Math.min(scaleX, scaleY)));
     }
@@ -752,7 +752,7 @@ export function PayLaLogo3D({
       role="img"
       aria-label="Pay La"
       className={cx(
-        "relative grid size-12 place-items-center overflow-hidden",
+        "relative grid size-15 place-items-center overflow-hidden",
         "[&_canvas]:block",
         className,
       )}

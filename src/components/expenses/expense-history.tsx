@@ -122,7 +122,7 @@ export function ExpenseHistory({
                 >
                   <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                     <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap gap-2">
+                      <div className="mb-2 flex flex-wrap gap-2 items-center">
                         <Badge tone="primary">Settlement</Badge>
                         <span className="type-caption text-muted">
                           {formatExpenseDate(settlement.date)}
@@ -181,7 +181,7 @@ export function ExpenseHistory({
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                     <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap gap-2">
+                      <div className="mb-2 flex flex-wrap gap-2 items-center">
                         <Badge tone="accent">
                           {expenseCategoryLabels[expense.category]}
                         </Badge>

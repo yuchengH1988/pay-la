@@ -67,7 +67,7 @@ export function GroupsOverview({ user }: { user: User }) {
       <div className="mx-auto grid w-full max-w-6xl gap-6">
         <header className="flex flex-col gap-4 border-b-[3px] border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <PayLaLogo3D className="size-12" />
+            <PayLaLogo3D />
             <div>
               <p className="type-caption text-muted">Pay La</p>
               <h1 className="type-h2">Groups</h1>
