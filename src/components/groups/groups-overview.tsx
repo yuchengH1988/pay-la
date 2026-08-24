@@ -12,6 +12,7 @@ import {
   LoadingCard,
   ThemeToggle,
 } from "@/src/components/ui";
+import { PayLaLogo3D } from "@/src/components/brand";
 import { useGroups } from "@/src/hooks/use-groups";
 import { createGroup } from "@/src/services/groups";
 import { signOut } from "@/src/services/auth";
@@ -66,7 +67,7 @@ export function GroupsOverview({ user }: { user: User }) {
       <div className="mx-auto grid w-full max-w-6xl gap-6">
         <header className="flex flex-col gap-4 border-b-[3px] border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="poster-grid size-12 border-[3px] border-border bg-primary shadow-hard-sm" />
+            <PayLaLogo3D className="size-12" />
             <div>
               <p className="type-caption text-muted">Pay La</p>
               <h1 className="type-h2">Groups</h1>

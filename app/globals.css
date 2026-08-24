@@ -239,8 +239,8 @@ textarea {
 }
 
 .type-display {
-  @apply text-7xl sm:text-8xl md:text-9xl;
-  line-height: 0.78;
+  @apply text-[clamp(4.5rem,12vw,12rem)] lg:text-[clamp(4.5rem,8vw,8rem)];
+  line-height: 0.9;
 }
 
 .type-h1 {
