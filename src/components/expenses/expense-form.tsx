@@ -425,7 +425,7 @@ export function ExpenseForm({
             {values.participantIds.map((memberId) => (
               <label
                 key={memberId}
-                className="grid min-h-12 grid-cols-[minmax(0,1fr)_8rem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
+                className="grid min-h-12 grid-cols-[minmax(0,1fr)_ㄚrem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
               >
                 <span className="type-small min-w-0 truncate">
                   {formatMemberLabel(memberId, currentUserId, memberProfiles)}
@@ -482,7 +482,7 @@ export function ExpenseForm({
                     value={values.percentages[memberId] ?? ""}
                     inputMode="decimal"
                     placeholder="50"
-                    className="min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
+                    className="max-w-26 min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
                     onChange={(event) => {
                       clearSplitError();
                       setValues((current) => ({

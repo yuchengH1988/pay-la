@@ -8,6 +8,7 @@ import {
   Avatar,
   Badge,
   Button,
+  Dialog,
   Frame,
   LoadingCard,
   ThemeToggle,
@@ -219,37 +220,25 @@ export function GroupDetail({
               </Frame>
 
               <InvitationPanel group={group} userId={user.uid} />
-
-              {isEditing ? (
-                <Frame as="section" className="p-5">
-                  <div className="mb-5 flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="type-h3">Edit Group</h2>
-                      <p className="type-small mt-2 text-muted">
-                        Currency changes only update the label.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  <GroupForm
-                    key={`${group.id}-${group.name}-${group.currency}`}
-                    initialValues={{
-                      name: group.name,
-                      currency: group.currency,
-                    }}
-                    submitLabel="Save Group"
-                    loading={isSaving}
-                    onSubmit={handleUpdateGroup}
-                  />
-                </Frame>
-              ) : null}
             </div>
+
+            <Dialog
+              open={isEditing}
+              title="Edit Group"
+              description="Currency changes only update the label."
+              onClose={() => setIsEditing(false)}
+            >
+              <GroupForm
+                key={`${group.id}-${group.name}-${group.currency}`}
+                initialValues={{
+                  name: group.name,
+                  currency: group.currency,
+                }}
+                submitLabel="Save Group"
+                loading={isSaving}
+                onSubmit={handleUpdateGroup}
+              />
+            </Dialog>
           </section>
         ) : (
           <Frame surface="surface" dashed className="p-6 text-center">

@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { expenseCategoryLabels } from "@/src/constants/expense-categories";
-import { Alert, Badge, Button, Frame, LoadingCard } from "@/src/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Dialog,
+  Frame,
+  LoadingCard,
+} from "@/src/components/ui";
 import {
   deleteExpense,
   formatAmountFromMinor,
@@ -167,101 +174,88 @@ export function ExpenseHistory({
                 key={`expense-${expense.id}`}
                 className="border-b-[3px] border-border bg-surface px-1 py-4 last:border-b-0"
               >
-                {editingExpense?.id === expense.id ? (
-                  <ExpenseForm
-                    group={group}
-                    currentUserId={currentUserId}
-                    memberProfiles={memberProfiles}
-                    initialExpense={expense}
-                    submitLabel="Save Expense"
-                    loading={savingExpenseId === expense.id}
-                    onSubmit={handleUpdateExpense}
-                    onCancel={() => setEditingExpense(null)}
-                  />
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap gap-2 items-center">
-                        <Badge tone="accent">
-                          {expenseCategoryLabels[expense.category]}
-                        </Badge>
-                        <span className="type-caption text-muted">
-                          {formatExpenseDate(expense.date)}
-                        </span>
-                        <Badge tone="muted">{expense.splitType}</Badge>
-                      </div>
-                      <p className="type-h3 truncate">{expense.name}</p>
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                  <div className="min-w-0">
+                    <div className="mb-2 flex flex-wrap gap-2 items-center">
+                      <Badge tone="accent">
+                        {expenseCategoryLabels[expense.category]}
+                      </Badge>
+                      <span className="type-caption text-muted">
+                        {formatExpenseDate(expense.date)}
+                      </span>
+                      <Badge tone="muted">{expense.splitType}</Badge>
+                    </div>
+                    <p className="type-h3 truncate">{expense.name}</p>
+                    <p className="type-small mt-1 text-muted">
+                      Paid by{" "}
+                      {formatMemberLabel(
+                        expense.paidBy,
+                        currentUserId,
+                        memberProfiles,
+                      )}
+                    </p>
+                    <p className="type-small mt-1 text-muted">
+                      {Object.keys(expense.participants).length} participants
+                    </p>
+                    {expense.participants[currentUserId] ? (
                       <p className="type-small mt-1 text-muted">
-                        Paid by{" "}
-                        {formatMemberLabel(
-                          expense.paidBy,
-                          currentUserId,
-                          memberProfiles,
+                        Your share{" "}
+                        {formatAmountFromMinor(
+                          expense.participants[currentUserId].resolvedAmountMinor,
+                          group.currency,
                         )}
                       </p>
-                      <p className="type-small mt-1 text-muted">
-                        {Object.keys(expense.participants).length} participants
-                      </p>
-                      {expense.participants[currentUserId] ? (
-                        <p className="type-small mt-1 text-muted">
-                          Your share{" "}
-                          {formatAmountFromMinor(
-                            expense.participants[currentUserId].resolvedAmountMinor,
-                            group.currency,
-                          )}
-                        </p>
-                      ) : null}
-                      {expense.note ? (
-                        <p className="type-small mt-2 text-muted">{expense.note}</p>
-                      ) : null}
-                    </div>
-                    <div className="grid gap-3 text-left sm:text-right">
-                      <p className="type-amount-md">
-                        {formatAmountFromMinor(expense.amountMinor, group.currency)}
-                      </p>
-                      <div className="flex gap-2 sm:justify-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingExpense(expense)}
-                        >
-                          Edit
-                        </Button>
-                        {confirmingDeleteId === expense.id ? (
-                          <>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setConfirmingDeleteId(null)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="danger"
-                              size="sm"
-                              loading={deletingExpenseId === expense.id}
-                              onClick={() => handleDeleteExpense(expense.id)}
-                            >
-                              Confirm
-                            </Button>
-                          </>
-                        ) : (
+                    ) : null}
+                    {expense.note ? (
+                      <p className="type-small mt-2 text-muted">{expense.note}</p>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-3 text-left sm:text-right">
+                    <p className="type-amount-md">
+                      {formatAmountFromMinor(expense.amountMinor, group.currency)}
+                    </p>
+                    <div className="flex gap-2 sm:justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingExpense(expense)}
+                      >
+                        Edit
+                      </Button>
+                      {confirmingDeleteId === expense.id ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmingDeleteId(null)}
+                          >
+                            Cancel
+                          </Button>
                           <Button
                             type="button"
                             variant="danger"
                             size="sm"
-                            onClick={() => setConfirmingDeleteId(expense.id)}
+                            loading={deletingExpenseId === expense.id}
+                            onClick={() => handleDeleteExpense(expense.id)}
                           >
-                            Delete
+                            Confirm
                           </Button>
-                        )}
-                      </div>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setConfirmingDeleteId(expense.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
               </article>
             );
           })}
@@ -283,6 +277,27 @@ export function ExpenseHistory({
           </Alert>
         </div>
       ) : null}
+
+      <Dialog
+        open={editingExpense !== null}
+        title="Edit Expense"
+        description="Changes update the stored expense and derived balance."
+        onClose={() => setEditingExpense(null)}
+      >
+        {editingExpense ? (
+          <ExpenseForm
+            key={editingExpense.id}
+            group={group}
+            currentUserId={currentUserId}
+            memberProfiles={memberProfiles}
+            initialExpense={editingExpense}
+            submitLabel="Save Expense"
+            loading={savingExpenseId === editingExpense.id}
+            onSubmit={handleUpdateExpense}
+            onCancel={() => setEditingExpense(null)}
+          />
+        ) : null}
+      </Dialog>
     </Frame>
   );
 }

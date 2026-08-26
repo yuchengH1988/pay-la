@@ -21,15 +21,16 @@ export function Dialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-foreground/35 px-4 py-6"
+      className="fixed inset-0 z-50 grid place-items-stretch bg-foreground/35 md:place-items-center md:px-4 md:py-6"
       role="presentation"
       onMouseDown={onClose}
     >
       <Frame
+        shadow="none"
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className="w-full max-w-md p-5"
+        className="h-dvh w-full max-w-none overflow-y-auto rounded-none p-5 md:h-auto md:max-h-[calc(100dvh-3rem)] md:max-w-md md:rounded-xs md:shadow-hard"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-4 border-b-[3px] border-border pb-3">

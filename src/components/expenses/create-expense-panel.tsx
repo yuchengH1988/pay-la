@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Frame } from "@/src/components/ui";
+import { Alert, Button, Dialog, Frame } from "@/src/components/ui";
 import { createExpense } from "@/src/services/expenses";
 import type { ExpenseFormValues } from "@/src/types/expense";
 import type { Group } from "@/src/types/group";
@@ -55,11 +55,17 @@ export function CreateExpensePanel({
             Store the expense with resolved participant shares.
           </p>
         </div>
-        <Button type="button" onClick={() => setIsOpen((current) => !current)}>
-          {isOpen ? "Close" : "Add"}
+        <Button type="button" onClick={() => setIsOpen(true)}>
+          Add
         </Button>
       </div>
-      {isOpen ? (
+
+      <Dialog
+        open={isOpen}
+        title="Add Expense"
+        description="Store the expense with resolved participant shares."
+        onClose={() => setIsOpen(false)}
+      >
         <ExpenseForm
           group={group}
           currentUserId={currentUserId}
@@ -69,7 +75,8 @@ export function CreateExpensePanel({
           onSubmit={handleCreateExpense}
           onCancel={() => setIsOpen(false)}
         />
-      ) : null}
+      </Dialog>
+
       {error ? (
         <div className="mt-4">
           <Alert title="Expense error" tone="danger">

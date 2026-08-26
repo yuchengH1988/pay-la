@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Badge, Button, Frame, LoadingCard } from "@/src/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Dialog,
+  Frame,
+  LoadingCard,
+} from "@/src/components/ui";
 import {
   createSettlement,
 } from "@/src/services/settlements";
@@ -63,7 +70,14 @@ export function SettlementPanel({
   const [actionError, setActionError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const draftKey = useMemo(() => formatDraftKey(draft), [draft]);
-  const isFormOpen = isOpen || draft !== null;
+  const isDialogOpen = isOpen || draft !== null;
+
+  function closeDialog() {
+    setIsOpen(false);
+    onDraftConsumed();
+    setPendingValues(null);
+    setActionError(null);
+  }
 
   async function handlePrepareSettlement(values: SettlementFormValues) {
     setPendingValues(values);
@@ -103,76 +117,77 @@ export function SettlementPanel({
         <Button
           type="button"
           onClick={() => {
-            setIsOpen(!isFormOpen);
+            setIsOpen(true);
             onDraftConsumed();
             setPendingValues(null);
             setActionError(null);
             setSuccessMessage(null);
           }}
         >
-          {isFormOpen ? "Close" : "Settle Up"}
+          Settle Up
         </Button>
       </div>
 
-      {isFormOpen && !pendingValues ? (
-        <SettlementForm
-          key={draftKey}
-          group={group}
-          currentUserId={currentUserId}
-          memberProfiles={memberProfiles}
-          initialValues={draft ?? undefined}
-          submitLabel="Review Settlement"
-          onSubmit={handlePrepareSettlement}
-          onCancel={() => {
-            setIsOpen(false);
-            onDraftConsumed();
-            setPendingValues(null);
-          }}
-        />
-      ) : null}
-
-      {pendingValues ? (
-        <Frame surface="surface" shadow="sm" className="grid gap-4 p-4">
-          <div>
-            <p className="type-label">Confirm settlement</p>
-            <p className="type-small mt-2 text-muted">
-              {formatMemberLabel(
-                pendingValues.payerId,
-                currentUserId,
-                memberProfiles,
-              )}{" "}
-              pays{" "}
-              {formatMemberLabel(
-                pendingValues.receiverId,
-                currentUserId,
-                memberProfiles,
-              )}
-            </p>
-            <p className="type-amount-md mt-2">
-              {formatAmountFromMinor(
-                parseAmountToMinor(pendingValues.amount) ?? 0,
-                group.currency,
-              )}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              loading={isSaving}
-              onClick={handleConfirmSettlement}
-            >
-              Confirm
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setPendingValues(null)}
-            >
-              Back
-            </Button>
-          </div>
-        </Frame>
-      ) : null}
+      <Dialog
+        open={isDialogOpen}
+        title={pendingValues ? "Confirm Settlement" : "Settle Up"}
+        description="Record a repayment without changing expense history."
+        onClose={closeDialog}
+      >
+        {!pendingValues ? (
+          <SettlementForm
+            key={draftKey}
+            group={group}
+            currentUserId={currentUserId}
+            memberProfiles={memberProfiles}
+            initialValues={draft ?? undefined}
+            submitLabel="Review Settlement"
+            onSubmit={handlePrepareSettlement}
+            onCancel={closeDialog}
+          />
+        ) : (
+          <Frame surface="surface" shadow="sm" className="grid gap-4 p-4">
+            <div>
+              <p className="type-label">Confirm settlement</p>
+              <p className="type-small mt-2 text-muted">
+                {formatMemberLabel(
+                  pendingValues.payerId,
+                  currentUserId,
+                  memberProfiles,
+                )}{" "}
+                pays{" "}
+                {formatMemberLabel(
+                  pendingValues.receiverId,
+                  currentUserId,
+                  memberProfiles,
+                )}
+              </p>
+              <p className="type-amount-md mt-2">
+                {formatAmountFromMinor(
+                  parseAmountToMinor(pendingValues.amount) ?? 0,
+                  group.currency,
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                loading={isSaving}
+                onClick={handleConfirmSettlement}
+              >
+                Confirm
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setPendingValues(null)}
+              >
+                Back
+              </Button>
+            </div>
+          </Frame>
+        )}
+      </Dialog>
 
       {successMessage ? (
         <div className="mt-4">
