@@ -5,18 +5,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Alert,
-  Avatar,
   Badge,
   Button,
   Dialog,
   Frame,
   LoadingCard,
-  ThemeToggle,
 } from "@/src/components/ui";
 import { PayLaLogo3D } from "@/src/components/brand";
+import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { useGroups } from "@/src/hooks/use-groups";
 import { createGroup } from "@/src/services/groups";
-import { signOut } from "@/src/services/auth";
 import { GroupForm } from "./group-form";
 
 function getErrorMessage(error: unknown) {
@@ -31,10 +29,8 @@ export function GroupsOverview({ user }: { user: User }) {
   const router = useRouter();
   const { groups, loading, error } = useGroups(user.uid);
   const [isCreating, setIsCreating] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const displayName = user.displayName || user.email || "Pay La user";
 
   async function handleCreateGroup(values: { name: string; currency: string }) {
     setIsCreating(true);
@@ -51,61 +47,21 @@ export function GroupsOverview({ user }: { user: User }) {
     }
   }
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    setActionError(null);
-
-    try {
-      await signOut();
-    } catch (signOutError) {
-      setActionError(getErrorMessage(signOutError));
-      setIsSigningOut(false);
-    }
-  }
-
   return (
     <main className="min-h-dvh bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-6xl gap-6">
-        <header className="flex flex-col gap-4 border-b-[3px] border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <PayLaLogo3D />
-            <div>
-              <p className="type-caption text-muted">Pay La</p>
-              <h1 className="type-h2">Groups</h1>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              {user.photoURL ? (
-                <div
-                  role="img"
-                  aria-label={`${displayName} profile image`}
-                  className="size-11 rounded-xs border-[3px] border-border bg-muted-surface shadow-hard-sm"
-                  style={{
-                    backgroundImage: `url(${user.photoURL})`,
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                  }}
-                />
-              ) : (
-                <Avatar name={displayName} />
-              )}
-              <div className="min-w-0">
-                <p className="type-caption text-muted">Signed in</p>
-                <p className="type-small truncate">{displayName}</p>
-              </div>
-            </div>
-            <ThemeToggle />
-            <Button
-              type="button"
-              variant="outline"
-              loading={isSigningOut}
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </Button>
-          </div>
-        </header>
+        <AppHeader
+          leading={<PayLaLogo3D />}
+          eyebrow="Pay La"
+          title="Groups"
+          actions={
+            <SignedInHeaderActions
+              user={user}
+              showSignedInLabel
+              onError={setActionError}
+            />
+          }
+        />
 
         <section className="grid gap-5">
           <div className="grid gap-4">

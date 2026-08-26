@@ -5,18 +5,16 @@ import type { User } from "firebase/auth";
 import { useCallback, useState } from "react";
 import {
   Alert,
-  Avatar,
   Badge,
   Button,
   Dialog,
   Frame,
   LoadingCard,
-  ThemeToggle,
 } from "@/src/components/ui";
+import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { useGroup } from "@/src/hooks/use-group";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateGroup } from "@/src/services/groups";
-import { signOut } from "@/src/services/auth";
 import { CreateExpensePanel, ExpenseHistory } from "@/src/components/expenses";
 import { GroupBalancePanel } from "@/src/components/balance";
 import { useExpenses } from "@/src/hooks/use-expenses";
@@ -58,9 +56,7 @@ export function GroupDetail({
   const [settlementDraft, setSettlementDraft] =
     useState<SettlementFormValues | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const displayName = user.displayName || user.email || "Pay La user";
 
   async function handleUpdateGroup(values: { name: string; currency: string }) {
     setIsSaving(true);
@@ -76,18 +72,6 @@ export function GroupDetail({
     }
   }
 
-  async function handleSignOut() {
-    setIsSigningOut(true);
-    setActionError(null);
-
-    try {
-      await signOut();
-    } catch (signOutError) {
-      setActionError(getErrorMessage(signOutError));
-      setIsSigningOut(false);
-    }
-  }
-
   const handleSettlementDraftConsumed = useCallback(() => {
     setSettlementDraft(null);
   }, []);
@@ -95,8 +79,8 @@ export function GroupDetail({
   return (
     <main className="min-h-dvh bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-6xl gap-6">
-        <header className="flex flex-col gap-4 border-b-[3px] border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
+        <AppHeader
+          leading={
             <Link
               href="/"
               className="type-control grid size-12 place-items-center border-[3px] border-border bg-primary text-primary-foreground shadow-hard-sm"
@@ -104,40 +88,13 @@ export function GroupDetail({
             >
               ←
             </Link>
-            <div>
-              <p className="type-caption text-muted">Group workspace</p>
-              <h1 className="type-h2">{loading ? "Loading" : group?.name || "Group"}</h1>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              {user.photoURL ? (
-                <div
-                  role="img"
-                  aria-label={`${displayName} profile image`}
-                  className="size-11 rounded-xs border-[3px] border-border bg-muted-surface shadow-hard-sm"
-                  style={{
-                    backgroundImage: `url(${user.photoURL})`,
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                  }}
-                />
-              ) : (
-                <Avatar name={displayName} />
-              )}
-              <p className="type-small truncate">{displayName}</p>
-            </div>
-            <ThemeToggle />
-            <Button
-              type="button"
-              variant="outline"
-              loading={isSigningOut}
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </Button>
-          </div>
-        </header>
+          }
+          eyebrow="Group workspace"
+          title={loading ? "Loading" : group?.name || "Group"}
+          actions={
+            <SignedInHeaderActions user={user} onError={setActionError} />
+          }
+        />
 
         {loading ? (
           <LoadingCard />

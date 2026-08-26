@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Alert, Badge, Button, Frame, LoadingCard, ThemeToggle } from "@/src/components/ui";
+import { AppHeader } from "@/src/components/layout";
 import { useAuth } from "@/src/hooks/use-auth";
 import { useInvitation } from "@/src/hooks/use-invitation";
 import {
@@ -158,12 +159,16 @@ export function JoinInvitation() {
   return (
     <main className="min-h-dvh bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl content-center gap-5">
-        <header className="flex items-center justify-between gap-4">
-          <Link href="/" className="type-h3">
-            Pay La
-          </Link>
-          <ThemeToggle />
-        </header>
+        <AppHeader
+          bordered={false}
+          leading={
+            <Link href="/" className="type-h3">
+              Pay La
+            </Link>
+          }
+          title=""
+          actions={<ThemeToggle />}
+        />
         {content}
         {result ? (
           <Alert title="Invitation accepted" tone="success">
