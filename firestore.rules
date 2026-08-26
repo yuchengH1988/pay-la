@@ -14,9 +14,14 @@ service cloud.firestore {
       return value == null || value is string;
     }
 
+    function isValidShortName(value) {
+      return value == null || (value is string && value.size() > 0 && value.size() <= 32);
+    }
+
     function hasValidUserProfileCreateShape() {
       return request.resource.data.keys().hasOnly([
         'displayName',
+        'shortName',
         'email',
         'photoURL',
         'createdAt',
@@ -24,12 +29,14 @@ service cloud.firestore {
       ])
       && request.resource.data.keys().hasAll([
         'displayName',
+        'shortName',
         'email',
         'photoURL',
         'createdAt',
         'updatedAt'
       ])
       && isNullableString(request.resource.data.displayName)
+      && isValidShortName(request.resource.data.shortName)
       && isNullableString(request.resource.data.email)
       && isNullableString(request.resource.data.photoURL)
       && request.resource.data.createdAt is timestamp
@@ -316,11 +323,13 @@ service cloud.firestore {
       allow update: if isOwnUserDocument(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'displayName',
+          'shortName',
           'email',
           'photoURL',
           'updatedAt'
         ])
         && isNullableString(request.resource.data.displayName)
+        && isValidShortName(request.resource.data.shortName)
         && isNullableString(request.resource.data.email)
         && isNullableString(request.resource.data.photoURL)
         && request.resource.data.updatedAt is timestamp;
@@ -382,7 +391,12 @@ service cloud.firestore {
         && hasValidSettlementShape(groupId)
         && request.resource.data.createdBy == request.auth.uid;
 
-      allow update, delete: if false;
+      allow update: if isGroupMemberById(groupId)
+        && hasValidSettlementShape(groupId)
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isGroupMemberById(groupId);
     }
 
     match /{document=**} {

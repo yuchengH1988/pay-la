@@ -3,22 +3,19 @@
 import { useMemo, useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Dialog,
   Frame,
-  LoadingCard,
 } from "@/src/components/ui";
 import {
   createSettlement,
 } from "@/src/services/settlements";
 import {
   formatAmountFromMinor,
-  formatExpenseDate,
   parseAmountToMinor,
 } from "@/src/services/expenses";
 import type { Group } from "@/src/types/group";
-import type { Settlement, SettlementFormValues } from "@/src/types/settlement";
+import type { SettlementFormValues } from "@/src/types/settlement";
 import type { UserProfileMap } from "@/src/types/user-profile";
 import { formatMemberLabel } from "@/src/utils/member-label";
 import { SettlementForm } from "./settlement-form";
@@ -49,20 +46,16 @@ export function SettlementPanel({
   group,
   currentUserId,
   memberProfiles,
-  settlements,
-  loading,
-  error,
   draft,
   onDraftConsumed,
+  className,
 }: {
   group: Group;
   currentUserId: string;
   memberProfiles: UserProfileMap;
-  settlements: Settlement[];
-  loading: boolean;
-  error: string | null;
   draft: SettlementFormValues | null;
   onDraftConsumed: () => void;
+  className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,27 +99,20 @@ export function SettlementPanel({
   }
 
   return (
-    <Frame as="section" className="p-5">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="type-h3">Settlements</h2>
-          <p className="type-small mt-2 text-muted">
-            Record repayments without changing expense history.
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={() => {
-            setIsOpen(true);
-            onDraftConsumed();
-            setPendingValues(null);
-            setActionError(null);
-            setSuccessMessage(null);
-          }}
-        >
-          Settle Up
-        </Button>
-      </div>
+    <>
+      <Button
+        type="button"
+        className={className}
+        onClick={() => {
+          setIsOpen(true);
+          onDraftConsumed();
+          setPendingValues(null);
+          setActionError(null);
+          setSuccessMessage(null);
+        }}
+      >
+        Settle Up
+      </Button>
 
       <Dialog
         open={isDialogOpen}
@@ -190,74 +176,20 @@ export function SettlementPanel({
       </Dialog>
 
       {successMessage ? (
-        <div className="mt-4">
+        <div>
           <Alert title="Settlement saved" tone="success">
             {successMessage}
           </Alert>
         </div>
       ) : null}
 
-      <div className="mt-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="type-label">History</h3>
-          <Badge tone="muted">{settlements.length} records</Badge>
-        </div>
-
-        {loading ? (
-          <LoadingCard />
-        ) : settlements.length > 0 ? (
-          <div className="grid gap-3">
-            {settlements.map((settlement) => (
-              <article
-                key={settlement.id}
-                className="border-b-[3px] border-border py-3 last:border-b-0"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="type-small font-bold">
-                      {formatMemberLabel(
-                        settlement.payerId,
-                        currentUserId,
-                        memberProfiles,
-                      )}{" "}
-                      paid{" "}
-                      {formatMemberLabel(
-                        settlement.receiverId,
-                        currentUserId,
-                        memberProfiles,
-                      )}
-                    </p>
-                    <p className="type-caption mt-1 text-muted">
-                      {formatExpenseDate(settlement.date)}
-                    </p>
-                    {settlement.note ? (
-                      <p className="type-small mt-2 text-muted">{settlement.note}</p>
-                    ) : null}
-                  </div>
-                  <p className="type-amount-md">
-                    {formatAmountFromMinor(settlement.amountMinor, group.currency)}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <Frame surface="surface" dashed className="p-5 text-center">
-            <h3 className="type-h3">No settlements yet</h3>
-            <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-              Record a repayment when one member pays another back.
-            </p>
-          </Frame>
-        )}
-      </div>
-
-      {error || actionError ? (
-        <div className="mt-4">
+      {actionError ? (
+        <div>
           <Alert title="Settlement error" tone="danger">
-            {error || actionError}
+            {actionError}
           </Alert>
         </div>
       ) : null}
-    </Frame>
+    </>
   );
 }

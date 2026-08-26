@@ -3,6 +3,8 @@
 import type { User } from "firebase/auth";
 import { useState } from "react";
 import { Avatar, Button, ThemeToggle } from "@/src/components/ui";
+import { ProfileSettings } from "@/src/components/profile/profile-settings";
+import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { signOut } from "@/src/services/auth";
 
 function getErrorMessage(error: unknown) {
@@ -23,7 +25,14 @@ export function SignedInHeaderActions({
   onError: (message: string | null) => void;
 }) {
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const displayName = user.displayName || user.email || "Pay La user";
+  const { profiles } = useUserProfiles([user.uid]);
+  const profile = profiles[user.uid];
+  const displayName =
+    profile?.shortName ||
+    profile?.displayName ||
+    user.displayName ||
+    user.email ||
+    "Pay La user";
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -62,6 +71,7 @@ export function SignedInHeaderActions({
         </div>
       </div>
       <ThemeToggle />
+      <ProfileSettings user={user} onError={onError} />
       <Button
         type="button"
         variant="outline"

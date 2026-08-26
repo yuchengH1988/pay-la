@@ -66,12 +66,9 @@ export function GroupBalancePanel({
 
   return (
     <Frame as="section" className="p-5">
-      <div className="mb-5 flex items-start justify-between gap-3">
+      <div className="mb-4 flex items-start justify-between gap-3 md:mb-5">
         <div>
           <h2 className="type-h3">Balance</h2>
-          <p className="type-small mt-2 text-muted">
-            Calculated from expense shares and recorded settlements.
-          </p>
         </div>
         <Badge tone="muted">{group.currency}</Badge>
       </div>
@@ -88,9 +85,8 @@ export function GroupBalancePanel({
         settled={isSettled}
       />
 
-      <div className="mt-5">
-        <h3 className="type-label">Member balance</h3>
-        <div className="mt-2">
+      <div className="mt-4 hidden md:block">
+        <div>
           {balance.memberBalances.map((memberBalance) => (
             <MemberBalance
               key={memberBalance.userId}
@@ -114,7 +110,7 @@ export function GroupBalancePanel({
       </div>
 
       {balance.simplifiedDebts.length > 0 ? (
-        <div className="mt-5">
+        <div className="mt-5 hidden md:block">
           <h3 className="type-label">Settlement suggestions</h3>
           <div className="mt-3 grid gap-3">
             {balance.simplifiedDebts.map((debt) => (

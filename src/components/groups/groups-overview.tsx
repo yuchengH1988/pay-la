@@ -55,13 +55,13 @@ export function GroupsOverview({ user }: { user: User }) {
           leading={<PayLaLogo3D />}
           eyebrow="Pay La"
           title="Groups"
-          actions={
+          actions={() => (
             <SignedInHeaderActions
               user={user}
               showSignedInLabel
               onError={setActionError}
             />
-          }
+          )}
         />
 
         <section className="grid gap-5">

@@ -14,17 +14,17 @@ export function MemberBalance({
   tone: BalanceTone;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b-[3px] border-border py-3">
-      <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center justify-between gap-3 border-b-[3px] border-border py-3">
+      <div className="flex min-w-0 items-center gap-3">
         <Avatar name={name} tone={tone === "negative" ? "secondary" : "primary"} />
-        <div>
-          <p className="font-bold">{name}</p>
+        <div className="min-w-0">
+          <p className="truncate font-bold">{name}</p>
           <p className="type-caption text-muted">{note}</p>
         </div>
       </div>
       <p
         className={cx(
-          "type-amount-md",
+          "type-amount-md shrink-0",
           toneText[tone],
         )}
       >

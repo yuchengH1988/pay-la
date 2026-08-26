@@ -1,11 +1,14 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
   type DocumentData,
   type QueryDocumentSnapshot,
   type Unsubscribe,
@@ -95,4 +98,19 @@ export async function createSettlement(
   );
 
   return settlementRef.id;
+}
+
+export async function updateSettlement(
+  group: Group,
+  settlementId: string,
+  values: SettlementFormValues,
+) {
+  await updateDoc(
+    doc(firestore, "groups", group.id, "settlements", settlementId),
+    buildSettlementPayload(group, values),
+  );
+}
+
+export async function deleteSettlement(groupId: string, settlementId: string) {
+  await deleteDoc(doc(firestore, "groups", groupId, "settlements", settlementId));
 }

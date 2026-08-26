@@ -1,6 +1,8 @@
 import {
   doc,
   onSnapshot,
+  serverTimestamp,
+  updateDoc,
   type DocumentData,
   type DocumentSnapshot,
   type Unsubscribe,
@@ -18,11 +20,19 @@ function toUserProfile(snapshot: DocumentSnapshot<DocumentData>): UserProfile | 
   return {
     id: snapshot.id,
     displayName: data.displayName,
+    shortName: data.shortName ?? null,
     email: data.email,
     photoURL: data.photoURL,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
+}
+
+export async function updateUserProfileName(userId: string, shortName: string) {
+  await updateDoc(doc(firestore, "users", userId), {
+    shortName: shortName.trim(),
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export function subscribeToUserProfile(

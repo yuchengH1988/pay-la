@@ -18,29 +18,28 @@ import type { Group } from "@/src/types/group";
 import type { UserProfileMap } from "@/src/types/user-profile";
 import { formatMemberLabel } from "@/src/utils/member-label";
 
+type ExpenseFormErrors = Partial<Record<keyof ExpenseFormValues, string>>;
+type ExpenseFormTab = "basic" | "split" | "category" | "participants" | "date" | "note";
+
+type SplitSummary =
+  | { type: "equal"; shares: Array<{ userId: string; resolvedAmountMinor: number }> }
+  | { type: "exact"; assignedMinor: number; remainingMinor: number | null }
+  | { type: "percentage"; assignedBasisPoints: number; remainingBasisPoints: number };
+
 const splitTypes: Array<{ value: SplitType; label: string }> = [
   { value: "equal", label: "Equal" },
   { value: "exact", label: "Exact amount" },
   { value: "percentage", label: "Percentage" },
 ];
 
-type ExpenseFormErrors = Partial<Record<keyof ExpenseFormValues, string>>;
-
-type SplitSummary =
-  | {
-      type: "equal";
-      shares: Array<{ userId: string; resolvedAmountMinor: number }>;
-    }
-  | {
-      type: "exact";
-      assignedMinor: number;
-      remainingMinor: number | null;
-    }
-  | {
-      type: "percentage";
-      assignedBasisPoints: number;
-      remainingBasisPoints: number;
-    };
+const formTabs: Array<{ value: ExpenseFormTab; label: string }> = [
+  { value: "basic", label: "Basic" },
+  { value: "split", label: "Split" },
+  { value: "category", label: "Category" },
+  { value: "participants", label: "Participants" },
+  { value: "date", label: "Date" },
+  { value: "note", label: "Note" },
+];
 
 const splitErrorMessages: Record<SplitErrorCode, string> = {
   invalid_amount: "Amount must be greater than 0 with up to 2 decimals.",
@@ -236,6 +235,34 @@ function getSplitSummary(values: ExpenseFormValues): SplitSummary {
   };
 }
 
+function getErrorTab(errors: ExpenseFormErrors): ExpenseFormTab | null {
+  if (errors.name || errors.amount) {
+    return "basic";
+  }
+
+  if (errors.paidBy || errors.splitType) {
+    return "split";
+  }
+
+  if (errors.category) {
+    return "category";
+  }
+
+  if (errors.participantIds) {
+    return "participants";
+  }
+
+  if (errors.date) {
+    return "date";
+  }
+
+  if (errors.note) {
+    return "note";
+  }
+
+  return null;
+}
+
 export function ExpenseForm({
   group,
   currentUserId,
@@ -263,7 +290,7 @@ export function ExpenseForm({
           amount: "",
           category: "food",
           paidBy: currentUserId,
-          participantIds: [currentUserId],
+          participantIds: group.memberIds,
           splitType: "equal",
           exactAmounts: {},
           percentages: {},
@@ -272,7 +299,9 @@ export function ExpenseForm({
         },
   );
   const [errors, setErrors] = useState<ExpenseFormErrors>({});
+  const [activeTab, setActiveTab] = useState<ExpenseFormTab>("basic");
   const splitSummary = getSplitSummary(values);
+  const paidByLabel = formatMemberLabel(values.paidBy, currentUserId, memberProfiles);
 
   function clearSplitError() {
     setErrors((current) => {
@@ -312,6 +341,12 @@ export function ExpenseForm({
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
+      const errorTab = getErrorTab(nextErrors);
+
+      if (errorTab) {
+        setActiveTab(errorTab);
+      }
+
       return;
     }
 
@@ -320,238 +355,276 @@ export function ExpenseForm({
 
   return (
     <form className="grid gap-4" onSubmit={handleSubmit}>
-      <TextInput
-        label="Expense name"
-        value={values.name}
-        error={errors.name}
-        maxLength={100}
-        placeholder="Dinner"
-        onChange={(event) =>
-          setValues((current) => ({ ...current, name: event.target.value }))
-        }
-      />
-      <TextInput
-        label="Amount"
-        value={values.amount}
-        error={errors.amount}
-        inputMode="decimal"
-        placeholder="1200.00"
-        onChange={(event) => {
-          clearSplitError();
-          setValues((current) => ({ ...current, amount: event.target.value }));
-        }}
-      />
-      <SelectField
-        label="Category"
-        value={values.category}
-        onChange={(event) =>
-          setValues((current) => ({
-            ...current,
-            category: event.target.value as ExpenseFormValues["category"],
-          }))
-        }
-      >
-        {expenseCategories.map((category) => (
-          <option key={category} value={category}>
-            {expenseCategoryLabels[category]}
-          </option>
-        ))}
-      </SelectField>
-      {errors.category ? <p className="type-small text-danger">{errors.category}</p> : null}
-
-      <SelectField
-        label="Paid by"
-        value={values.paidBy}
-        onChange={(event) =>
-          setValues((current) => ({ ...current, paidBy: event.target.value }))
-        }
-      >
-        {group.memberIds.map((memberId) => (
-          <option key={memberId} value={memberId}>
-            {formatMemberLabel(memberId, currentUserId, memberProfiles)}
-          </option>
-        ))}
-      </SelectField>
-      {errors.paidBy ? <p className="type-small text-danger">{errors.paidBy}</p> : null}
-
-      <div className="grid gap-2">
-        <FieldLabel>Participants</FieldLabel>
-        <div className="grid gap-2">
-          {group.memberIds.map((memberId) => (
-            <label
-              key={memberId}
-              className="flex min-h-11 items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 font-bold shadow-hard-sm"
+      <div className="max-w-full overflow-x-auto pb-2">
+        <div className="flex w-max gap-2 pr-1 pt-1">
+          {formTabs.map((tab) => (
+            <Button
+              key={tab.value}
+              type="button"
+              size="sm"
+              variant={activeTab === tab.value ? "primary" : "ghost"}
+              onClick={() => setActiveTab(tab.value)}
             >
-              <input
-                type="checkbox"
-                checked={values.participantIds.includes(memberId)}
-                onChange={() => toggleParticipant(memberId)}
-                className="size-5 accent-[var(--primary)]"
-              />
-              <span>{formatMemberLabel(memberId, currentUserId, memberProfiles)}</span>
-            </label>
+              {tab.label}
+            </Button>
           ))}
         </div>
-        {errors.participantIds ? (
-          <p className="type-small text-danger">{errors.participantIds}</p>
-        ) : null}
       </div>
 
-      <SelectField
-        label="Split method"
-        value={values.splitType}
-        onChange={(event) => {
-          clearSplitError();
-          setValues((current) => ({
-            ...current,
-            splitType: event.target.value as SplitType,
-          }));
-        }}
-      >
-        {splitTypes.map((splitType) => (
-          <option key={splitType.value} value={splitType.value}>
-            {splitType.label}
-          </option>
-        ))}
-      </SelectField>
-      {errors.splitType ? (
-        <p className="type-small text-danger">{errors.splitType}</p>
-      ) : null}
-
-      {values.splitType === "exact" ? (
-        <div className="grid gap-2">
-          <FieldLabel>Exact amounts</FieldLabel>
-          <div className="grid gap-2">
-            {values.participantIds.map((memberId) => (
-              <label
-                key={memberId}
-                className="grid min-h-12 grid-cols-[minmax(0,1fr)_ㄚrem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
-              >
-                <span className="type-small min-w-0 truncate">
-                  {formatMemberLabel(memberId, currentUserId, memberProfiles)}
-                </span>
-                <input
-                  value={values.exactAmounts[memberId] ?? ""}
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  className="min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
-                  onChange={(event) => {
-                    clearSplitError();
-                    setValues((current) => ({
-                      ...current,
-                      exactAmounts: {
-                        ...current.exactAmounts,
-                        [memberId]: event.target.value,
-                      },
-                    }));
-                  }}
-                />
-              </label>
-            ))}
+      {activeTab === "basic" ? (
+        <div className="grid gap-4">
+          <TextInput
+            label="Expense name"
+            value={values.name}
+            error={errors.name}
+            maxLength={100}
+            placeholder="Dinner"
+            onChange={(event) =>
+              setValues((current) => ({ ...current, name: event.target.value }))
+            }
+          />
+          <TextInput
+            label="Amount"
+            value={values.amount}
+            error={errors.amount}
+            inputMode="decimal"
+            placeholder="1200.00"
+            onChange={(event) => {
+              clearSplitError();
+              setValues((current) => ({ ...current, amount: event.target.value }));
+            }}
+          />
+          <div className="border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+            <p className="type-small">Paid by {paidByLabel}</p>
           </div>
-          {splitSummary.type === "exact" ? (
-            <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
-              <p className="type-small">
-                Assigned: {group.currency} {formatMinorAmount(splitSummary.assignedMinor)}
-              </p>
-              <p className="type-small">
-                Remaining:{" "}
-                {splitSummary.remainingMinor === null
-                  ? "-"
-                  : `${group.currency} ${formatMinorAmount(splitSummary.remainingMinor)}`}
-              </p>
-            </div>
-          ) : null}
         </div>
       ) : null}
 
-      {values.splitType === "percentage" ? (
-        <div className="grid gap-2">
-          <FieldLabel>Percentages</FieldLabel>
-          <div className="grid gap-2">
-            {values.participantIds.map((memberId) => (
-              <label
-                key={memberId}
-                className="grid min-h-12 grid-cols-[minmax(0,1fr)_8rem] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
-              >
-                <span className="type-small min-w-0 truncate">
-                  {formatMemberLabel(memberId, currentUserId, memberProfiles)}
-                </span>
-                <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-                  <input
-                    value={values.percentages[memberId] ?? ""}
-                    inputMode="decimal"
-                    placeholder="50"
-                    className="max-w-26 min-h-9 rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
-                    onChange={(event) => {
-                      clearSplitError();
-                      setValues((current) => ({
-                        ...current,
-                        percentages: {
-                          ...current.percentages,
-                          [memberId]: event.target.value,
-                        },
-                      }));
-                    }}
-                  />
-                  <span className="type-small">%</span>
+      {activeTab === "split" ? (
+        <div className="grid gap-4">
+          <SelectField
+            label="Paid by"
+            value={values.paidBy}
+            onChange={(event) =>
+              setValues((current) => ({ ...current, paidBy: event.target.value }))
+            }
+          >
+            {group.memberIds.map((memberId) => (
+              <option key={memberId} value={memberId}>
+                {formatMemberLabel(memberId, currentUserId, memberProfiles)}
+              </option>
+            ))}
+          </SelectField>
+          {errors.paidBy ? <p className="type-small text-danger">{errors.paidBy}</p> : null}
+
+          <SelectField
+            label="Split method"
+            value={values.splitType}
+            onChange={(event) => {
+              clearSplitError();
+              setValues((current) => ({
+                ...current,
+                splitType: event.target.value as SplitType,
+              }));
+            }}
+          >
+            {splitTypes.map((splitType) => (
+              <option key={splitType.value} value={splitType.value}>
+                {splitType.label}
+              </option>
+            ))}
+          </SelectField>
+          {errors.splitType ? (
+            <p className="type-small text-danger">{errors.splitType}</p>
+          ) : null}
+
+          {values.splitType === "exact" ? (
+            <div className="grid gap-2">
+              <FieldLabel>Exact amounts</FieldLabel>
+              <div className="grid gap-2">
+                {values.participantIds.map((memberId) => (
+                  <label
+                    key={memberId}
+                    className="grid min-h-12 grid-cols-[minmax(0,1fr)_minmax(6rem,8rem)] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
+                  >
+                    <span className="type-small min-w-0 truncate">
+                      {formatMemberLabel(memberId, currentUserId, memberProfiles)}
+                    </span>
+                    <input
+                      value={values.exactAmounts[memberId] ?? ""}
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      className="min-h-9 w-full rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
+                      onChange={(event) => {
+                        clearSplitError();
+                        setValues((current) => ({
+                          ...current,
+                          exactAmounts: {
+                            ...current.exactAmounts,
+                            [memberId]: event.target.value,
+                          },
+                        }));
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+              {splitSummary.type === "exact" ? (
+                <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+                  <p className="type-small">
+                    Assigned: {group.currency} {formatMinorAmount(splitSummary.assignedMinor)}
+                  </p>
+                  <p className="type-small">
+                    Remaining:{" "}
+                    {splitSummary.remainingMinor === null
+                      ? "-"
+                      : `${group.currency} ${formatMinorAmount(splitSummary.remainingMinor)}`}
+                  </p>
                 </div>
-              </label>
-            ))}
-          </div>
-          {splitSummary.type === "percentage" ? (
+              ) : null}
+            </div>
+          ) : null}
+
+          {values.splitType === "percentage" ? (
+            <div className="grid gap-2">
+              <FieldLabel>Percentages</FieldLabel>
+              <div className="grid gap-2">
+                {values.participantIds.map((memberId) => (
+                  <label
+                    key={memberId}
+                    className="grid min-h-12 grid-cols-[minmax(0,1fr)_minmax(5.5rem,7rem)] items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 shadow-hard-sm"
+                  >
+                    <span className="type-small min-w-0 truncate">
+                      {formatMemberLabel(memberId, currentUserId, memberProfiles)}
+                    </span>
+                    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                      <input
+                        value={values.percentages[memberId] ?? ""}
+                        inputMode="decimal"
+                        placeholder="50"
+                        className="min-h-9 w-full rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
+                        onChange={(event) => {
+                          clearSplitError();
+                          setValues((current) => ({
+                            ...current,
+                            percentages: {
+                              ...current.percentages,
+                              [memberId]: event.target.value,
+                            },
+                          }));
+                        }}
+                      />
+                      <span className="type-small">%</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {splitSummary.type === "percentage" ? (
+                <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
+                  <p className="type-small">
+                    Assigned: {formatBasisPoints(splitSummary.assignedBasisPoints)}
+                  </p>
+                  <p className="type-small">
+                    Remaining: {formatBasisPoints(splitSummary.remainingBasisPoints)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {splitSummary.type === "equal" && splitSummary.shares.length > 0 ? (
             <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
-              <p className="type-small">
-                Assigned: {formatBasisPoints(splitSummary.assignedBasisPoints)}
-              </p>
-              <p className="type-small">
-                Remaining: {formatBasisPoints(splitSummary.remainingBasisPoints)}
-              </p>
+              <FieldLabel>Equal shares</FieldLabel>
+              {splitSummary.shares.map((share) => (
+                <p key={share.userId} className="type-small flex justify-between gap-3">
+                  <span className="min-w-0 truncate">
+                    {formatMemberLabel(share.userId, currentUserId, memberProfiles)}
+                  </span>
+                  <span>
+                    {group.currency} {formatMinorAmount(share.resolvedAmountMinor)}
+                  </span>
+                </p>
+              ))}
             </div>
           ) : null}
         </div>
       ) : null}
 
-      {splitSummary.type === "equal" && splitSummary.shares.length > 0 ? (
-        <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
-          <FieldLabel>Equal shares</FieldLabel>
-          {splitSummary.shares.map((share) => (
-            <p key={share.userId} className="type-small flex justify-between gap-3">
-              <span className="min-w-0 truncate">
-                {formatMemberLabel(share.userId, currentUserId, memberProfiles)}
-              </span>
-              <span>
-                {group.currency} {formatMinorAmount(share.resolvedAmountMinor)}
-              </span>
-            </p>
-          ))}
+      {activeTab === "category" ? (
+        <div className="grid gap-2">
+          <SelectField
+            label="Category"
+            value={values.category}
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                category: event.target.value as ExpenseFormValues["category"],
+              }))
+            }
+          >
+            {expenseCategories.map((category) => (
+              <option key={category} value={category}>
+                {expenseCategoryLabels[category]}
+              </option>
+            ))}
+          </SelectField>
+          {errors.category ? <p className="type-small text-danger">{errors.category}</p> : null}
         </div>
       ) : null}
 
-      <TextInput
-        label="Date"
-        type="date"
-        value={values.date}
-        error={errors.date}
-        onChange={(event) =>
-          setValues((current) => ({ ...current, date: event.target.value }))
-        }
-      />
+      {activeTab === "participants" ? (
+        <div className="grid gap-2">
+          <FieldLabel>Participants</FieldLabel>
+          <div className="grid gap-2">
+            {group.memberIds.map((memberId) => (
+              <label
+                key={memberId}
+                className="flex min-h-11 items-center gap-3 rounded-xs border-[3px] border-border bg-surface-raised px-3 font-bold shadow-hard-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={values.participantIds.includes(memberId)}
+                  onChange={() => toggleParticipant(memberId)}
+                  className="size-5 accent-[var(--primary)]"
+                />
+                <span>{formatMemberLabel(memberId, currentUserId, memberProfiles)}</span>
+              </label>
+            ))}
+          </div>
+          {errors.participantIds ? (
+            <p className="type-small text-danger">{errors.participantIds}</p>
+          ) : null}
+        </div>
+      ) : null}
 
-      <label className="grid gap-2">
-        <FieldLabel>Note</FieldLabel>
-        <textarea
-          value={values.note}
-          maxLength={500}
-          rows={3}
-          className="rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground shadow-hard-sm outline-none placeholder:text-muted focus:shadow-hard focus:ring-[3px] focus:ring-info"
-          placeholder="Optional"
+      {activeTab === "date" ? (
+        <TextInput
+          label="Date"
+          type="date"
+          value={values.date}
+          error={errors.date}
           onChange={(event) =>
-            setValues((current) => ({ ...current, note: event.target.value }))
+            setValues((current) => ({ ...current, date: event.target.value }))
           }
         />
-        {errors.note ? <p className="type-small text-danger">{errors.note}</p> : null}
-      </label>
+      ) : null}
+
+      {activeTab === "note" ? (
+        <label className="grid gap-2">
+          <FieldLabel>Note</FieldLabel>
+          <textarea
+            value={values.note}
+            maxLength={500}
+            rows={3}
+            className="rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground shadow-hard-sm outline-none placeholder:text-muted focus:shadow-hard focus:ring-[3px] focus:ring-info"
+            placeholder="Optional"
+            onChange={(event) =>
+              setValues((current) => ({ ...current, note: event.target.value }))
+            }
+          />
+          {errors.note ? <p className="type-small text-danger">{errors.note}</p> : null}
+        </label>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {onCancel ? (

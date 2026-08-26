@@ -10,15 +10,20 @@ import {
   Frame,
   LoadingCard,
 } from "@/src/components/ui";
+import { SettlementForm } from "@/src/components/settlements";
 import {
   deleteExpense,
   formatAmountFromMinor,
   formatExpenseDate,
   updateExpense,
 } from "@/src/services/expenses";
+import {
+  deleteSettlement,
+  updateSettlement,
+} from "@/src/services/settlements";
 import type { Expense, ExpenseFormValues } from "@/src/types/expense";
 import type { Group } from "@/src/types/group";
-import type { Settlement } from "@/src/types/settlement";
+import type { Settlement, SettlementFormValues } from "@/src/types/settlement";
 import type { UserProfileMap } from "@/src/types/user-profile";
 import { formatMemberLabel } from "@/src/utils/member-label";
 import { ExpenseForm } from "./expense-form";
@@ -31,9 +36,23 @@ function getErrorMessage(error: unknown) {
   return "Something went wrong. Please try again.";
 }
 
+function settlementToFormValues(settlement: Settlement): SettlementFormValues {
+  return {
+    payerId: settlement.payerId,
+    receiverId: settlement.receiverId,
+    amount: (settlement.amountMinor / 100).toFixed(2),
+    date: settlement.date.toDate().toISOString().slice(0, 10),
+    note: settlement.note,
+  };
+}
+
 type GroupHistoryItem =
   | { type: "expense"; sortTime: number; expense: Expense }
   | { type: "settlement"; sortTime: number; settlement: Settlement };
+
+type DeleteTarget =
+  | { type: "expense"; id: string }
+  | { type: "settlement"; id: string };
 
 export function ExpenseHistory({
   group,
@@ -52,10 +71,13 @@ export function ExpenseHistory({
   loading: boolean;
   error: string | null;
 }) {
+  const [selectedItem, setSelectedItem] = useState<GroupHistoryItem | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
-  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<DeleteTarget | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [savingExpenseId, setSavingExpenseId] = useState<string | null>(null);
+  const [savingSettlementId, setSavingSettlementId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const historyItems = [
     ...expenses.map<GroupHistoryItem>((expense) => ({
@@ -88,22 +110,144 @@ export function ExpenseHistory({
     }
   }
 
-  async function handleDeleteExpense(expenseId: string) {
-    setDeletingExpenseId(expenseId);
+  async function handleUpdateSettlement(values: SettlementFormValues) {
+    if (!editingSettlement) {
+      return;
+    }
+
+    setSavingSettlementId(editingSettlement.id);
     setActionError(null);
 
     try {
-      await deleteExpense(group.id, expenseId);
-      setConfirmingDeleteId(null);
-    } catch (deleteError) {
-      setActionError(getErrorMessage(deleteError));
+      await updateSettlement(group, editingSettlement.id, values);
+      setEditingSettlement(null);
+    } catch (updateError) {
+      setActionError(getErrorMessage(updateError));
     } finally {
-      setDeletingExpenseId(null);
+      setSavingSettlementId(null);
     }
   }
 
+  async function handleDelete(target: DeleteTarget) {
+    const deleteKey = `${target.type}-${target.id}`;
+
+    setDeletingKey(deleteKey);
+    setActionError(null);
+
+    try {
+      if (target.type === "expense") {
+        await deleteExpense(group.id, target.id);
+      } else {
+        await deleteSettlement(group.id, target.id);
+      }
+
+      setConfirmingDelete(null);
+      setSelectedItem(null);
+    } catch (deleteError) {
+      setActionError(getErrorMessage(deleteError));
+    } finally {
+      setDeletingKey(null);
+    }
+  }
+
+  function closeDetailDialog() {
+    setSelectedItem(null);
+    setConfirmingDelete(null);
+  }
+
+  function getParticipantText(expense: Expense) {
+    const participantCount = Object.keys(expense.participants).length;
+    const includesAllMembers =
+      participantCount === group.memberIds.length &&
+      group.memberIds.every((memberId) => expense.participants[memberId]);
+
+    return includesAllMembers ? null : `${participantCount} participants`;
+  }
+
+  function renderSettlementSummary(settlement: Settlement) {
+    return (
+      <>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Badge tone="primary">Settlement</Badge>
+          <span className="type-caption text-muted">
+            {formatExpenseDate(settlement.date)}
+          </span>
+        </div>
+        <p className="type-h3 truncate">
+          {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)} paid{" "}
+          {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
+        </p>
+        <p className="type-small mt-1 text-muted">Balance repayment</p>
+      </>
+    );
+  }
+
+  function renderExpenseSummary(expense: Expense) {
+    const participantText = getParticipantText(expense);
+
+    return (
+      <>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Badge tone="accent">{expenseCategoryLabels[expense.category]}</Badge>
+          <span className="type-caption text-muted">
+            {formatExpenseDate(expense.date)}
+          </span>
+          <Badge tone="muted">{expense.splitType}</Badge>
+        </div>
+        <p className="type-h3 truncate">{expense.name}</p>
+        <p className="type-small mt-1 text-muted">
+          Paid by {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
+        </p>
+        {participantText ? (
+          <p className="type-small mt-1 text-muted">{participantText}</p>
+        ) : null}
+      </>
+    );
+  }
+
+  function renderDetailActions(target: DeleteTarget, onEdit: () => void) {
+    const isConfirming =
+      confirmingDelete?.type === target.type && confirmingDelete.id === target.id;
+    const deleteKey = `${target.type}-${target.id}`;
+
+    return (
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Button type="button" onClick={onEdit}>
+          Edit
+        </Button>
+        {isConfirming ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmingDelete(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              loading={deletingKey === deleteKey}
+              onClick={() => handleDelete(target)}
+            >
+              Confirm Delete
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            variant="danger"
+            onClick={() => setConfirmingDelete(target)}
+          >
+            Delete
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <Frame as="section" className="p-5">
+    <Frame as="section" className="min-w-0 p-4 sm:p-5">
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="type-h2">Group history</h2>
@@ -123,140 +267,46 @@ export function ExpenseHistory({
               const { settlement } = item;
 
               return (
-                <article
+                <button
                   key={`settlement-${settlement.id}`}
-                  className="border-b-[3px] border-border bg-surface px-1 py-4 last:border-b-0"
+                  type="button"
+                  className="block w-full text-left"
+                  onClick={() => setSelectedItem(item)}
                 >
-                  <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap gap-2 items-center">
-                        <Badge tone="primary">Settlement</Badge>
-                        <span className="type-caption text-muted">
-                          {formatExpenseDate(settlement.date)}
-                        </span>
+                  <article className="border-b-[3px] border-border bg-surface px-1 py-4 transition-colors hover:bg-muted-surface last:border-b-0">
+                    <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                      <div className="min-w-0">
+                        {renderSettlementSummary(settlement)}
                       </div>
-                      <p className="type-h3 truncate">
-                        {formatMemberLabel(
-                          settlement.payerId,
-                          currentUserId,
-                          memberProfiles,
-                        )}{" "}
-                        paid{" "}
-                        {formatMemberLabel(
-                          settlement.receiverId,
-                          currentUserId,
-                          memberProfiles,
-                        )}
-                      </p>
-                      <p className="type-small mt-1 text-muted">
-                        Balance repayment
-                      </p>
-                      {settlement.note ? (
-                        <p className="type-small mt-2 text-muted">
-                          {settlement.note}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="grid gap-3 text-left sm:text-right">
-                      <p className="type-amount-md">
+                      <p className="type-amount-md min-w-0 break-words text-left sm:text-right">
                         {formatAmountFromMinor(settlement.amountMinor, group.currency)}
                       </p>
                     </div>
-                  </div>
-                </article>
+                  </article>
+                </button>
               );
             }
 
             const { expense } = item;
 
             return (
-              <article
+              <button
                 key={`expense-${expense.id}`}
-                className="border-b-[3px] border-border bg-surface px-1 py-4 last:border-b-0"
+                type="button"
+                className="block w-full text-left"
+                onClick={() => setSelectedItem(item)}
               >
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                  <div className="min-w-0">
-                    <div className="mb-2 flex flex-wrap gap-2 items-center">
-                      <Badge tone="accent">
-                        {expenseCategoryLabels[expense.category]}
-                      </Badge>
-                      <span className="type-caption text-muted">
-                        {formatExpenseDate(expense.date)}
-                      </span>
-                      <Badge tone="muted">{expense.splitType}</Badge>
+                <article className="border-b-[3px] border-border bg-surface px-1 py-4 transition-colors hover:bg-muted-surface last:border-b-0">
+                  <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="min-w-0">
+                      {renderExpenseSummary(expense)}
                     </div>
-                    <p className="type-h3 truncate">{expense.name}</p>
-                    <p className="type-small mt-1 text-muted">
-                      Paid by{" "}
-                      {formatMemberLabel(
-                        expense.paidBy,
-                        currentUserId,
-                        memberProfiles,
-                      )}
-                    </p>
-                    <p className="type-small mt-1 text-muted">
-                      {Object.keys(expense.participants).length} participants
-                    </p>
-                    {expense.participants[currentUserId] ? (
-                      <p className="type-small mt-1 text-muted">
-                        Your share{" "}
-                        {formatAmountFromMinor(
-                          expense.participants[currentUserId].resolvedAmountMinor,
-                          group.currency,
-                        )}
-                      </p>
-                    ) : null}
-                    {expense.note ? (
-                      <p className="type-small mt-2 text-muted">{expense.note}</p>
-                    ) : null}
-                  </div>
-                  <div className="grid gap-3 text-left sm:text-right">
-                    <p className="type-amount-md">
+                    <p className="type-amount-md min-w-0 break-words text-left sm:text-right">
                       {formatAmountFromMinor(expense.amountMinor, group.currency)}
                     </p>
-                    <div className="flex gap-2 sm:justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingExpense(expense)}
-                      >
-                        Edit
-                      </Button>
-                      {confirmingDeleteId === expense.id ? (
-                        <>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setConfirmingDeleteId(null)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="danger"
-                            size="sm"
-                            loading={deletingExpenseId === expense.id}
-                            onClick={() => handleDeleteExpense(expense.id)}
-                          >
-                            Confirm
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="danger"
-                          size="sm"
-                          onClick={() => setConfirmingDeleteId(expense.id)}
-                        >
-                          Delete
-                        </Button>
-                      )}
-                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </button>
             );
           })}
         </div>
@@ -272,11 +322,76 @@ export function ExpenseHistory({
 
       {error || actionError ? (
         <div className="mt-4">
-          <Alert title="Expense error" tone="danger">
+          <Alert title="History error" tone="danger">
             {error || actionError}
           </Alert>
         </div>
       ) : null}
+
+      <Dialog
+        open={selectedItem !== null}
+        title={selectedItem?.type === "settlement" ? "Settlement" : "Expense"}
+        onClose={closeDetailDialog}
+      >
+        {selectedItem?.type === "expense" ? (
+          <div className="grid gap-4">
+            <div>
+              {renderExpenseSummary(selectedItem.expense)}
+              {selectedItem.expense.note ? (
+                <p className="type-small mt-3 text-muted">{selectedItem.expense.note}</p>
+              ) : null}
+            </div>
+            <Frame surface="surface" shadow="sm" className="grid gap-2 p-3">
+              <p className="type-label">Amount</p>
+              <p className="type-amount-md">
+                {formatAmountFromMinor(selectedItem.expense.amountMinor, group.currency)}
+              </p>
+              {selectedItem.expense.participants[currentUserId] ? (
+                <p className="type-small text-muted">
+                  Your share{" "}
+                  {formatAmountFromMinor(
+                    selectedItem.expense.participants[currentUserId].resolvedAmountMinor,
+                    group.currency,
+                  )}
+                </p>
+              ) : null}
+            </Frame>
+            {renderDetailActions(
+              { type: "expense", id: selectedItem.expense.id },
+              () => {
+                setEditingExpense(selectedItem.expense);
+                closeDetailDialog();
+              },
+            )}
+          </div>
+        ) : null}
+
+        {selectedItem?.type === "settlement" ? (
+          <div className="grid gap-4">
+            <div>
+              {renderSettlementSummary(selectedItem.settlement)}
+              {selectedItem.settlement.note ? (
+                <p className="type-small mt-3 text-muted">
+                  {selectedItem.settlement.note}
+                </p>
+              ) : null}
+            </div>
+            <Frame surface="surface" shadow="sm" className="grid gap-2 p-3">
+              <p className="type-label">Amount</p>
+              <p className="type-amount-md">
+                {formatAmountFromMinor(selectedItem.settlement.amountMinor, group.currency)}
+              </p>
+            </Frame>
+            {renderDetailActions(
+              { type: "settlement", id: selectedItem.settlement.id },
+              () => {
+                setEditingSettlement(selectedItem.settlement);
+                closeDetailDialog();
+              },
+            )}
+          </div>
+        ) : null}
+      </Dialog>
 
       <Dialog
         open={editingExpense !== null}
@@ -295,6 +410,27 @@ export function ExpenseHistory({
             loading={savingExpenseId === editingExpense.id}
             onSubmit={handleUpdateExpense}
             onCancel={() => setEditingExpense(null)}
+          />
+        ) : null}
+      </Dialog>
+
+      <Dialog
+        open={editingSettlement !== null}
+        title="Edit Settlement"
+        description="Changes update the recorded repayment and derived balance."
+        onClose={() => setEditingSettlement(null)}
+      >
+        {editingSettlement ? (
+          <SettlementForm
+            key={editingSettlement.id}
+            group={group}
+            currentUserId={currentUserId}
+            memberProfiles={memberProfiles}
+            initialValues={settlementToFormValues(editingSettlement)}
+            submitLabel="Save Settlement"
+            loading={savingSettlementId === editingSettlement.id}
+            onSubmit={handleUpdateSettlement}
+            onCancel={() => setEditingSettlement(null)}
           />
         ) : null}
       </Dialog>

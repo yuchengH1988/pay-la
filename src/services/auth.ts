@@ -34,12 +34,16 @@ export async function syncUserProfile(user: User) {
   const userSnapshot = await getDoc(userRef);
 
   if (userSnapshot.exists()) {
-    await updateDoc(userRef, profile);
+    await updateDoc(userRef, {
+      ...profile,
+      ...(userSnapshot.data().shortName === undefined ? { shortName: null } : {}),
+    });
     return;
   }
 
   await setDoc(userRef, {
     ...profile,
+    shortName: null,
     createdAt: serverTimestamp(),
   });
 }

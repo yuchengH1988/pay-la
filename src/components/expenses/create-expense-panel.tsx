@@ -51,9 +51,6 @@ export function CreateExpensePanel({
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <h2 className="type-h3">Add Expense</h2>
-          <p className="type-small mt-2 text-muted">
-            Store the expense with resolved participant shares.
-          </p>
         </div>
         <Button type="button" onClick={() => setIsOpen(true)}>
           Add

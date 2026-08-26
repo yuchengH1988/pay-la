@@ -1,4 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useState } from "react";
+import { Button, Dialog } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
 
 export function AppHeader({
@@ -12,30 +16,58 @@ export function AppHeader({
   leading: ReactNode;
   eyebrow?: ReactNode;
   title: ReactNode;
-  actions?: ReactNode;
+  actions?: ReactNode | (() => ReactNode);
   bordered?: boolean;
   className?: string;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const desktopActions = typeof actions === "function" ? actions() : actions;
+  const menuActions = typeof actions === "function" ? actions() : actions;
+
   return (
-    <header
-      className={cx(
-        "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
-        bordered && "border-b-[3px] border-border pb-5",
-        className,
-      )}
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        {leading}
-        {eyebrow || title ? (
-          <div className="min-w-0">
-            {eyebrow ? <p className="type-caption text-muted">{eyebrow}</p> : null}
-            {title ? <h1 className="type-h2 truncate">{title}</h1> : null}
-          </div>
+    <>
+      <header
+        className={cx(
+          "flex items-center justify-between gap-4",
+          bordered && "border-b-[3px] border-border pb-5",
+          className,
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          {leading}
+          {eyebrow || title ? (
+            <div className="min-w-0">
+              {eyebrow ? <p className="type-caption text-muted">{eyebrow}</p> : null}
+              {title ? <h1 className="type-h2 truncate">{title}</h1> : null}
+            </div>
+          ) : null}
+        </div>
+        {actions ? (
+          <>
+            <div className="hidden flex-wrap items-center gap-3 md:flex">
+              {desktopActions}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="md:hidden"
+              onClick={() => setMenuOpen(true)}
+            >
+              Menu
+            </Button>
+          </>
         ) : null}
-      </div>
+      </header>
+
       {actions ? (
-        <div className="flex flex-wrap items-center gap-3">{actions}</div>
+        <Dialog
+          open={menuOpen}
+          title="Menu"
+          onClose={() => setMenuOpen(false)}
+        >
+          <div className="grid gap-4">{menuActions}</div>
+        </Dialog>
       ) : null}
-    </header>
+    </>
   );
 }

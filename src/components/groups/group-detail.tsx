@@ -15,11 +15,14 @@ import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { useGroup } from "@/src/hooks/use-group";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateGroup } from "@/src/services/groups";
-import { CreateExpensePanel, ExpenseHistory } from "@/src/components/expenses";
+import { ExpenseHistory } from "@/src/components/expenses";
+import { ExpenseForm } from "@/src/components/expenses/expense-form";
 import { GroupBalancePanel } from "@/src/components/balance";
 import { useExpenses } from "@/src/hooks/use-expenses";
 import { useSettlements } from "@/src/hooks/use-settlements";
 import { SettlementPanel } from "@/src/components/settlements";
+import { createExpense } from "@/src/services/expenses";
+import type { ExpenseFormValues } from "@/src/types/expense";
 import type { SettlementFormValues } from "@/src/types/settlement";
 import { formatMemberLabel } from "@/src/utils/member-label";
 import { GroupForm } from "./group-form";
@@ -49,10 +52,13 @@ export function GroupDetail({
   } = useExpenses(group?.id ?? null);
   const {
     settlements,
-    loading: settlementsLoading,
     error: settlementsError,
   } = useSettlements(group?.id ?? null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [isCreatingExpense, setIsCreatingExpense] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [settlementDraft, setSettlementDraft] =
     useState<SettlementFormValues | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -72,12 +78,30 @@ export function GroupDetail({
     }
   }
 
+  async function handleCreateExpense(values: ExpenseFormValues) {
+    if (!group) {
+      return;
+    }
+
+    setIsCreatingExpense(true);
+    setActionError(null);
+
+    try {
+      await createExpense(group.id, user.uid, values);
+      setIsAddingExpense(false);
+    } catch (createError) {
+      setActionError(getErrorMessage(createError));
+    } finally {
+      setIsCreatingExpense(false);
+    }
+  }
+
   const handleSettlementDraftConsumed = useCallback(() => {
     setSettlementDraft(null);
   }, []);
 
   return (
-    <main className="min-h-dvh bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
+    <main className="min-h-dvh overflow-x-hidden bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto grid w-full max-w-6xl gap-6">
         <AppHeader
           leading={
@@ -91,37 +115,76 @@ export function GroupDetail({
           }
           eyebrow="Group workspace"
           title={loading ? "Loading" : group?.name || "Group"}
-          actions={
+          actions={() => (
             <SignedInHeaderActions user={user} onError={setActionError} />
-          }
+          )}
         />
 
         {loading ? (
           <LoadingCard />
         ) : group ? (
-          <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-            <div className="grid gap-5">
-              <Frame as="section" className="p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <Badge tone="muted">{group.currency}</Badge>
-                    <h2 className="type-display mt-4">{group.name}</h2>
-                    <p className="type-caption mt-3 text-muted">
-                      {group.memberIds.length} members
-                    </p>
-                  </div>
-                  <Button type="button" onClick={() => setIsEditing(true)}>
-                    Edit Group
-                  </Button>
-                </div>
-              </Frame>
-
-              <CreateExpensePanel
+          <section className="grid min-w-0 gap-5 md:grid-cols-[minmax(0,1fr)_360px] md:items-start">
+            <div className="min-w-0 md:col-start-2 md:row-start-1">
+              <GroupBalancePanel
                 group={group}
                 currentUserId={user.uid}
                 memberProfiles={profiles}
+                expenses={expenses}
+                settlements={settlements}
+                onSettleUp={(values) => setSettlementDraft(values)}
               />
+            </div>
 
+            <Frame
+              as="section"
+              className="min-w-0 p-3 md:col-start-2 md:row-start-2 md:p-5"
+            >
+              <div className="max-w-full overflow-x-auto pb-1 md:overflow-visible md:pb-0">
+                <div className="flex w-max max-w-none gap-3 pr-1 md:grid md:w-full md:max-w-full md:pr-0">
+                <Button
+                  type="button"
+                  className="shrink-0 md:w-full"
+                  onClick={() => setIsAddingExpense(true)}
+                >
+                  Add Expense
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="shrink-0 md:w-full"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Group
+                </Button>
+                <SettlementPanel
+                  group={group}
+                  currentUserId={user.uid}
+                  memberProfiles={profiles}
+                  draft={settlementDraft}
+                  onDraftConsumed={handleSettlementDraftConsumed}
+                  className="shrink-0 md:w-full"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="shrink-0 md:w-full"
+                  onClick={() => setIsMembersOpen(true)}
+                >
+                  Members
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="shrink-0 md:w-full"
+                  onClick={() => setIsInviteOpen(true)}
+                >
+                  Create Invitation
+                </Button>
+                </div>
+              </div>
+            </Frame>
+
+            <div className="grid min-w-0 gap-5 md:col-start-1 md:row-span-3 md:row-start-1">
               <ExpenseHistory
                 group={group}
                 currentUserId={user.uid}
@@ -133,51 +196,30 @@ export function GroupDetail({
               />
             </div>
 
-            <div className="grid content-start gap-5">
-              <GroupBalancePanel
+            <Button
+              type="button"
+              size="lg"
+              className="fixed bottom-5 right-4 z-40 md:hidden"
+              onClick={() => setIsAddingExpense(true)}
+            >
+              Add Expense
+            </Button>
+
+            <Dialog
+              open={isAddingExpense}
+              title="Add Expense"
+              onClose={() => setIsAddingExpense(false)}
+            >
+              <ExpenseForm
                 group={group}
                 currentUserId={user.uid}
                 memberProfiles={profiles}
-                expenses={expenses}
-                settlements={settlements}
-                onSettleUp={(values) => setSettlementDraft(values)}
+                submitLabel="Create Expense"
+                loading={isCreatingExpense}
+                onSubmit={handleCreateExpense}
+                onCancel={() => setIsAddingExpense(false)}
               />
-
-              <SettlementPanel
-                group={group}
-                currentUserId={user.uid}
-                memberProfiles={profiles}
-                settlements={settlements}
-                loading={settlementsLoading}
-                error={settlementsError}
-                draft={settlementDraft}
-                onDraftConsumed={handleSettlementDraftConsumed}
-              />
-
-              <Frame as="section" className="p-5">
-                <h2 className="type-h3">Members</h2>
-                <p className="type-small mt-2 text-muted">
-                  All current members have the same group permissions.
-                </p>
-                <div className="mt-5 grid gap-3">
-                  {group.memberIds.map((memberId) => (
-                    <div
-                      key={memberId}
-                      className="flex items-center justify-between gap-3 border-[3px] border-border bg-surface-raised p-3 shadow-hard-sm"
-                    >
-                      <span className="type-small min-w-0 truncate">
-                        {formatMemberLabel(memberId, user.uid, profiles)}
-                      </span>
-                      {memberId === group.createdBy ? (
-                        <Badge tone="primary">Created</Badge>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </Frame>
-
-              <InvitationPanel group={group} userId={user.uid} />
-            </div>
+            </Dialog>
 
             <Dialog
               open={isEditing}
@@ -196,6 +238,38 @@ export function GroupDetail({
                 onSubmit={handleUpdateGroup}
               />
             </Dialog>
+
+            <Dialog
+              open={isMembersOpen}
+              title="Members"
+              description="All current members have the same group permissions."
+              onClose={() => setIsMembersOpen(false)}
+            >
+              <div className="grid gap-3">
+                {group.memberIds.map((memberId) => (
+                  <div
+                    key={memberId}
+                    className="flex items-center justify-between gap-3 border-[3px] border-border bg-surface-raised p-3 shadow-hard-sm"
+                  >
+                    <span className="type-small min-w-0 truncate">
+                      {formatMemberLabel(memberId, user.uid, profiles)}
+                    </span>
+                    {memberId === group.createdBy ? (
+                      <Badge tone="primary">Created</Badge>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Dialog>
+
+            <Dialog
+              open={isInviteOpen}
+              title="Create Invitation"
+              description="Invitations are single-use and expire after 24 hours."
+              onClose={() => setIsInviteOpen(false)}
+            >
+              <InvitationPanel group={group} userId={user.uid} />
+            </Dialog>
           </section>
         ) : (
           <Frame surface="surface" dashed className="p-6 text-center">
@@ -212,9 +286,9 @@ export function GroupDetail({
           </Frame>
         )}
 
-        {error || profilesError || actionError ? (
+        {error || profilesError || settlementsError || actionError ? (
           <Alert title="Group error" tone="danger">
-            {error || profilesError || actionError}
+            {error || profilesError || settlementsError || actionError}
           </Alert>
         ) : null}
       </div>
