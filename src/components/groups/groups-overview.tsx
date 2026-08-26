@@ -15,6 +15,7 @@ import { PayLaLogo3D } from "@/src/components/brand";
 import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { useGroups } from "@/src/hooks/use-groups";
 import { createGroup } from "@/src/services/groups";
+import { GroupBalancePreview } from "./group-balance-preview";
 import { GroupForm } from "./group-form";
 
 function getErrorMessage(error: unknown) {
@@ -97,14 +98,12 @@ export function GroupsOverview({ user }: { user: User }) {
                         <div className="min-w-0">
                           <h2 className="type-h3 truncate">{group.name}</h2>
                           <p className="type-caption mt-2 text-muted">
-                            {group.memberIds.length}/30 members
+                            {group.memberIds.length} members
                           </p>
                         </div>
                         <Badge tone="muted">{group.currency}</Badge>
                       </div>
-                      <p className="type-small text-muted">
-                        Open group settings and future expense workspace.
-                      </p>
+                      <GroupBalancePreview group={group} currentUserId={user.uid} />
                     </Frame>
                   </button>
                 ))}

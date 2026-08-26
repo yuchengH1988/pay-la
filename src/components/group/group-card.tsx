@@ -30,7 +30,7 @@ export function GroupCard({
             {name}
           </p>
           <p className="type-caption mt-2 text-muted">
-            {members}/30 members . {currency}
+            {members} members . {currency}
           </p>
         </div>
         <Badge tone="muted">{status}</Badge>

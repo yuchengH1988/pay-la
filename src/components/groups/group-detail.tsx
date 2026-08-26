@@ -107,7 +107,7 @@ export function GroupDetail({
                     <Badge tone="muted">{group.currency}</Badge>
                     <h2 className="type-display mt-4">{group.name}</h2>
                     <p className="type-caption mt-3 text-muted">
-                      {group.memberIds.length}/30 members
+                      {group.memberIds.length} members
                     </p>
                   </div>
                   <Button type="button" onClick={() => setIsEditing(true)}>
