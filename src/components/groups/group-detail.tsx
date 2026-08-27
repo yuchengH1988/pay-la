@@ -9,6 +9,7 @@ import {
   Button,
   Dialog,
   Frame,
+  Icon,
   LoadingCard,
 } from "@/src/components/ui";
 import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
@@ -111,7 +112,7 @@ export function GroupDetail({
               className="type-control grid size-12 place-items-center border-[3px] border-border bg-primary text-primary-foreground shadow-hard-sm"
               aria-label="Back to groups"
             >
-              ←
+              <Icon name="arrow-left" />
             </Link>
           }
           eyebrow="Group workspace"
@@ -147,6 +148,7 @@ export function GroupDetail({
                     className="hidden shrink-0 md:inline-flex md:w-full"
                     onClick={() => setIsAddingExpense(true)}
                   >
+                    <Icon name="plus" />
                     Add Expense
                   </Button>
                   <SettlementPanel
@@ -163,6 +165,7 @@ export function GroupDetail({
                     className="shrink-0 md:w-full"
                     onClick={() => setIsGroupMenuOpen(true)}
                   >
+                    <Icon name="settings" />
                     Group Settings
                   </Button>
                 </div>
@@ -186,9 +189,10 @@ export function GroupDetail({
               size="lg"
               className="fixed bottom-5 right-4 z-40 md:hidden"
               onClick={() => setIsAddingExpense(true)}
-            >
-              Add Expense
-            </Button>
+                >
+                  <Icon name="plus" />
+                  Add Expense
+                </Button>
 
             <Dialog
               open={isAddingExpense}
@@ -220,6 +224,7 @@ export function GroupDetail({
                     setIsEditing(true);
                   }}
                 >
+                  <Icon name="edit" />
                   Edit Group
                 </Button>
                 <Button
@@ -230,6 +235,7 @@ export function GroupDetail({
                     setIsMembersOpen(true);
                   }}
                 >
+                  <Icon name="user" />
                   Members
                 </Button>
                 <Button
@@ -240,6 +246,7 @@ export function GroupDetail({
                     setIsInviteOpen(true);
                   }}
                 >
+                  <Icon name="link" />
                   Create Invitation
                 </Button>
               </div>
@@ -305,6 +312,7 @@ export function GroupDetail({
               href="/"
               className="type-control mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xs border-[3px] border-border bg-primary px-4 py-2 text-primary-foreground shadow-hard-sm transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-info"
             >
+              <Icon name="arrow-left" />
               Back to Groups
             </Link>
           </Frame>

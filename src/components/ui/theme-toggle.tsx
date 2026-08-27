@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { Icon } from "./icon";
 
 type Theme = "light" | "dark";
 
@@ -81,7 +82,7 @@ export function ThemeToggle() {
         className="grid size-6 place-items-center border-[3px] border-border bg-primary text-primary-foreground"
         suppressHydrationWarning
       >
-        {isDark ? "L" : "D"}
+        <Icon name={isDark ? "sun" : "moon"} className="size-4" />
       </span>
       {isDark ? "Light" : "Dark"}
     </button>

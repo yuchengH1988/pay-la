@@ -1,4 +1,4 @@
-import { Avatar, Button, Frame } from "@/src/components/ui";
+import { Avatar, Button, Frame, Icon } from "@/src/components/ui";
 
 export function SettlementSuggestion({
   from,
@@ -20,13 +20,14 @@ export function SettlementSuggestion({
     >
       <div className="flex min-w-0 items-center gap-2">
         <Avatar name={from} />
-        <span className="type-h3">-&gt;</span>
+        <Icon name="arrow-left" className="size-6 rotate-180" />
         <Avatar name={to} tone="secondary" />
       </div>
       <div className="flex items-center justify-between gap-3 sm:justify-end">
         <p className="type-amount-md">{amount}</p>
         {onAction ? (
           <Button type="button" size="sm" variant="secondary" onClick={onAction}>
+            <Icon name="wallet" className="size-4" />
             {actionLabel ?? "Settle"}
           </Button>
         ) : null}

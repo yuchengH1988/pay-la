@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Button, Dialog } from "@/src/components/ui";
+import { Button, Dialog, Icon } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
 
 export function AppHeader({
@@ -52,8 +52,9 @@ export function AppHeader({
               variant="outline"
               className="md:hidden"
               onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
             >
-              Menu
+              <Icon name="menu" />
             </Button>
           </>
         ) : null}

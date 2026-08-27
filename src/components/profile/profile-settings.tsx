@@ -2,7 +2,7 @@
 
 import type { User } from "firebase/auth";
 import { useState, type FormEvent } from "react";
-import { Button, Dialog, TextInput } from "@/src/components/ui";
+import { Button, Dialog, Icon, TextInput } from "@/src/components/ui";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateUserProfileName } from "@/src/services/users";
 
@@ -72,6 +72,7 @@ export function ProfileSettings({
   return (
     <>
       <Button type="button" variant="ghost" onClick={openDialog}>
+        <Icon name="user" />
         Profile
       </Button>
 
@@ -101,6 +102,7 @@ export function ProfileSettings({
               Cancel
             </Button>
             <Button type="submit" loading={saving}>
+              <Icon name="check" />
               Save Profile
             </Button>
           </div>

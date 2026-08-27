@@ -9,6 +9,7 @@ import {
   Button,
   Dialog,
   Frame,
+  Icon,
   LoadingCard,
 } from "@/src/components/ui";
 import { PayLaLogo3D } from "@/src/components/brand";
@@ -78,6 +79,7 @@ export function GroupsOverview({ user }: { user: User }) {
                 </p>
               </div>
               <Button type="button" onClick={() => setShowCreateForm(true)}>
+                <Icon name="plus" />
                 Create Group
               </Button>
             </div>
@@ -124,6 +126,7 @@ export function GroupsOverview({ user }: { user: User }) {
                   className="mt-5"
                   onClick={() => setShowCreateForm(true)}
                 >
+                  <Icon name="plus" />
                   Create Group
                 </Button>
               </Frame>

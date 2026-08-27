@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Dialog, Frame } from "@/src/components/ui";
+import { Alert, Button, Dialog, Frame, Icon } from "@/src/components/ui";
 import { createExpense } from "@/src/services/expenses";
 import type { ExpenseFormValues } from "@/src/types/expense";
 import type { Group } from "@/src/types/group";
@@ -53,6 +53,7 @@ export function CreateExpensePanel({
           <h2 className="type-h3">Add Expense</h2>
         </div>
         <Button type="button" onClick={() => setIsOpen(true)}>
+          <Icon name="plus" />
           Add
         </Button>
       </div>

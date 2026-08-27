@@ -2,7 +2,7 @@
 
 import type { User } from "firebase/auth";
 import { useState } from "react";
-import { Avatar, Button, ThemeToggle } from "@/src/components/ui";
+import { Avatar, Button, Icon, ThemeToggle } from "@/src/components/ui";
 import { ProfileSettings } from "@/src/components/profile/profile-settings";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { signOut } from "@/src/services/auth";
@@ -78,6 +78,7 @@ export function SignedInHeaderActions({
         loading={isSigningOut}
         onClick={handleSignOut}
       >
+        <Icon name="arrow-left" />
         Sign Out
       </Button>
     </>

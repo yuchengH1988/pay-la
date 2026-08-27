@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "./button";
 import { Frame } from "./frame";
+import { Icon } from "./icon";
 
 export function Dialog({
   open,
@@ -49,7 +50,7 @@ export function Dialog({
             onClick={onClose}
             aria-label="Close dialog"
           >
-            x
+            <Icon name="close" className="size-4" />
           </Button>
         </div>
         {children}

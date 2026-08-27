@@ -8,6 +8,7 @@ import {
   Button,
   Dialog,
   Frame,
+  Icon,
   LoadingCard,
 } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
@@ -322,6 +323,7 @@ export function ExpenseHistory({
     return (
       <div className="mt-5 flex flex-wrap gap-3">
         <Button type="button" onClick={onEdit}>
+          <Icon name="edit" />
           Edit
         </Button>
         {isConfirming ? (
@@ -339,6 +341,7 @@ export function ExpenseHistory({
               loading={deletingKey === deleteKey}
               onClick={() => handleDelete(target)}
             >
+              <Icon name="trash" />
               Confirm Delete
             </Button>
           </>
@@ -348,6 +351,7 @@ export function ExpenseHistory({
             variant="danger"
             onClick={() => setConfirmingDelete(target)}
           >
+            <Icon name="trash" />
             Delete
           </Button>
         )}

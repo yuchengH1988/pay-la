@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Badge, Button, Frame } from "@/src/components/ui";
+import { Alert, Badge, Button, Frame, Icon } from "@/src/components/ui";
 import { createInvitation } from "@/src/services/invitations";
 import type { Group } from "@/src/types/group";
 
@@ -93,6 +93,7 @@ export function InvitationPanel({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Button type="button" onClick={handleCopyInvitation}>
+              <Icon name={copied ? "check" : "copy"} />
               {copied ? "Copied" : "Copy Link"}
             </Button>
             <Button
@@ -101,6 +102,7 @@ export function InvitationPanel({
               loading={isCreating}
               onClick={handleCreateInvitation}
             >
+              <Icon name="link" />
               New Link
             </Button>
           </div>
@@ -112,6 +114,7 @@ export function InvitationPanel({
           onClick={handleCreateInvitation}
           className="w-full"
         >
+          <Icon name="link" />
           Create Invitation
         </Button>
       )}

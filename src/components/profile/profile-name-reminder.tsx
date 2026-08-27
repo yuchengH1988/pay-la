@@ -2,7 +2,7 @@
 
 import type { User } from "firebase/auth";
 import { useState, type FormEvent } from "react";
-import { Button, Dialog, Frame, TextInput } from "@/src/components/ui";
+import { Button, Dialog, Frame, Icon, TextInput } from "@/src/components/ui";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
 import { updateUserProfileName } from "@/src/services/users";
 
@@ -87,6 +87,7 @@ export function ProfileNameReminder({
                 setOpen(true);
               }}
             >
+              <Icon name="user" />
               Set Name
             </Button>
             <Button type="button" variant="ghost" onClick={() => setDismissed(true)}>
@@ -119,6 +120,7 @@ export function ProfileNameReminder({
               Cancel
             </Button>
             <Button type="submit" loading={saving}>
+              <Icon name="check" />
               Save Name
             </Button>
           </div>

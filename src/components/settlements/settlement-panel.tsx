@@ -6,6 +6,7 @@ import {
   Button,
   Dialog,
   Frame,
+  Icon,
 } from "@/src/components/ui";
 import {
   createSettlement,
@@ -111,6 +112,7 @@ export function SettlementPanel({
           setSuccessMessage(null);
         }}
       >
+        <Icon name="wallet" />
         Settle Up
       </Button>
 
@@ -161,6 +163,7 @@ export function SettlementPanel({
                 loading={isSaving}
                 onClick={handleConfirmSettlement}
               >
+                <Icon name="check" />
                 Confirm
               </Button>
               <Button
