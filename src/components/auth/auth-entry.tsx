@@ -6,6 +6,7 @@ import {
   Badge,
   Button,
   Frame,
+  Icon,
   ThemeToggle,
 } from "@/src/components/ui";
 import { PayLaLogo3D } from "@/src/components/brand";
@@ -55,20 +56,25 @@ export function AuthEntry() {
           actions={<ThemeToggle />}
         />
 
-        <section className="grid flex-1 items-center gap-6 lg:grid-cols-[1fr_360px]">
+        <section className="grid flex-1 items-center gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
             <Badge tone="accent">Shared expenses, settled fast</Badge>
-            <h1 className="type-display lg:max-w-3xl">
+            <h1 className="type-display max-w-4xl">
               Split co$ts. Settle clearly.
             </h1>
-            <p className="type-small max-w-2xl text-muted">
-              Track group spending in seconds, split each cost your way,
-              <br/>
-              and turn messy paybacks into clear next steps.
+            <p className="type-small max-w-xl text-muted">
+              Track shared spending, split each cost your way, and make paybacks obvious.
             </p>
+            <div className="hidden grid-cols-3 gap-3 sm:grid">
+              {["Groups", "Splits", "Settles"].map((label) => (
+                <Frame key={label} surface="surface" shadow="sm" className="p-3">
+                  <p className="type-caption text-muted">{label}</p>
+                </Frame>
+              ))}
+            </div>
           </div>
 
-          <Frame as="section" className="p-5 sm:p-6">
+          <Frame as="section" surface="surface" className="p-5 sm:p-6">
             {loading ? (
               <div className="space-y-4" aria-live="polite">
                 <p className="type-h2">Checking session</p>
@@ -77,7 +83,10 @@ export function AuthEntry() {
               </div>
             ) : (
               <div className="space-y-5">
-                <h2 className="type-h2">Start Pay La</h2>
+                <div>
+                  <p className="type-caption text-muted">Entry ticket</p>
+                  <h2 className="type-h2 mt-2">Start Pay La</h2>
+                </div>
                 <Button
                   type="button"
                   size="lg"
@@ -85,8 +94,12 @@ export function AuthEntry() {
                   onClick={handleSignIn}
                   className="w-full"
                 >
+                  <Icon name="user" />
                   Continue with Google
                 </Button>
+                <p className="type-caption text-muted">
+                  Your groups stay linked to your Google account.
+                </p>
               </div>
             )}
           </Frame>

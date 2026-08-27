@@ -211,7 +211,10 @@ export function ExpenseHistory({
           </div>
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
-              <Badge tone="primary">Settlement</Badge>
+              <Badge tone="primary">
+                <Icon name="wallet" className="size-3" />
+                Settlement
+              </Badge>
             </div>
             <p className="type-label truncate">
               {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)} paid{" "}
@@ -287,7 +290,10 @@ export function ExpenseHistory({
           </div>
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
-              <Badge tone="accent">{expenseCategoryLabels[expense.category]}</Badge>
+              <Badge tone="accent">
+                <Icon name="receipt" className="size-3" />
+                {expenseCategoryLabels[expense.category]}
+              </Badge>
             </div>
             <p className="type-label truncate">{expense.name}</p>
             <p className="type-caption mt-1 truncate text-muted">

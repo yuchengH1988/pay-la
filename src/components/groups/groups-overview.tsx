@@ -73,12 +73,15 @@ export function GroupsOverview({ user }: { user: User }) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <Badge tone="accent">Member groups</Badge>
-                <p className="type-body mt-3 max-w-xl text-muted">
-                  Create a shared expense group and keep the currency as a
-                  display label for future expenses.
+                <p className="type-small mt-3 max-w-xl text-muted">
+                  Open a group to add expenses, review balances, and settle up.
                 </p>
               </div>
-              <Button type="button" onClick={() => setShowCreateForm(true)}>
+              <Button
+                type="button"
+                className="hidden sm:inline-flex"
+                onClick={() => setShowCreateForm(true)}
+              >
                 <Icon name="plus" />
                 Create Group
               </Button>
@@ -98,17 +101,23 @@ export function GroupsOverview({ user }: { user: User }) {
                     className="text-left"
                     onClick={() => router.push(`/groups?groupId=${group.id}`)}
                   >
-                    <Frame as="article" className="p-4 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5">
+                    <Frame
+                      as="article"
+                      className="grid min-h-full gap-4 p-4 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5"
+                    >
                       <div className="mb-5 flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <h2 className="type-h3 truncate">{group.name}</h2>
-                          <p className="type-caption mt-2 text-muted">
+                          <p className="type-caption mt-2 flex items-center gap-2 text-muted">
+                            <Icon name="user" className="size-4" />
                             {group.memberIds.length} members
                           </p>
                         </div>
                         <Badge tone="muted">{group.currency}</Badge>
                       </div>
-                      <GroupBalancePreview group={group} currentUserId={user.uid} />
+                      <Frame surface="surface" shadow="sm" className="p-3">
+                        <GroupBalancePreview group={group} currentUserId={user.uid} />
+                      </Frame>
                     </Frame>
                   </button>
                 ))}
@@ -134,6 +143,16 @@ export function GroupsOverview({ user }: { user: User }) {
           </div>
 
         </section>
+
+        <Button
+          type="button"
+          size="lg"
+          className="fixed bottom-5 right-4 z-40 sm:hidden"
+          onClick={() => setShowCreateForm(true)}
+        >
+          <Icon name="plus" />
+          Create Group
+        </Button>
 
         <Dialog
           open={showCreateForm}

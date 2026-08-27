@@ -141,10 +141,15 @@ export function GroupDetail({
               as="section"
               className="min-w-0 p-3 md:col-start-2 md:row-start-2 md:p-5"
             >
+              <div className="mb-3 hidden md:block">
+                <p className="type-label">Actions</p>
+                <p className="type-caption mt-1 text-muted">Add, settle, or manage this group.</p>
+              </div>
               <div className="max-w-full overflow-x-auto pb-1 md:overflow-visible md:pb-0">
                 <div className="flex w-max max-w-none gap-2 p-1 md:grid md:w-full md:max-w-full md:pr-0">
                   <Button
                     type="button"
+                    size="lg"
                     className="hidden shrink-0 md:inline-flex md:w-full"
                     onClick={() => setIsAddingExpense(true)}
                   >
@@ -189,10 +194,10 @@ export function GroupDetail({
               size="lg"
               className="fixed bottom-5 right-4 z-40 md:hidden"
               onClick={() => setIsAddingExpense(true)}
-                >
-                  <Icon name="plus" />
-                  Add Expense
-                </Button>
+            >
+              <Icon name="plus" />
+              Add Expense
+            </Button>
 
             <Dialog
               open={isAddingExpense}

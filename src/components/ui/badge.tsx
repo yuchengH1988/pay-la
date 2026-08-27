@@ -11,7 +11,7 @@ export function Badge({
   return (
     <span
       className={cx(
-        "type-badge inline-flex items-center rounded-xs border-2 border-border px-2 py-1",
+        "type-badge inline-flex items-center gap-1 rounded-xs border-2 border-border px-2 py-1",
         tone === "primary" && "bg-primary text-primary-foreground",
         tone === "accent" && "bg-accent text-accent-foreground",
         tone === "danger" && "bg-danger text-foreground",
