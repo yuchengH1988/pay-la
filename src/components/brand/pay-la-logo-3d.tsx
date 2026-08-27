@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cx } from "@/src/components/ui/cx";
+import { useI18n } from "@/src/i18n";
 
 type Point = {
   x: number;
@@ -696,6 +697,7 @@ export function PayLaLogo3D({
 }: {
   className?: string;
 }) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const instanceRef = useRef<P5Instance | null>(null);
   const [ready, setReady] = useState(false);
@@ -750,7 +752,7 @@ export function PayLaLogo3D({
     <div
       ref={containerRef}
       role="img"
-      aria-label="Pay La"
+      aria-label={t("brand.name")}
       className={cx(
         "relative grid size-15 place-items-center overflow-hidden",
         "[&_canvas]:block",

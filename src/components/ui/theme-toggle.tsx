@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { cx } from "./cx";
 import { Icon } from "./icon";
 import { useI18n } from "@/src/i18n";
 
@@ -52,7 +53,7 @@ function applyTheme(theme: Theme, notify = false) {
   }
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { t } = useI18n();
   const theme = useSyncExternalStore(
     subscribeThemeChange,
@@ -75,7 +76,10 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="type-label inline-flex min-h-11 items-center gap-2 rounded-xs border-[3px] border-border bg-surface-raised px-3 text-foreground shadow-hard-sm transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-info"
+      className={cx(
+        "type-label inline-flex min-h-11 items-center gap-2 rounded-xs border-[3px] border-border bg-surface-raised px-3 text-foreground shadow-hard-sm transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-info",
+        className,
+      )}
       aria-pressed={isDark}
       aria-label={t("theme.switchTo", {
         theme: isDark ? t("theme.light") : t("theme.dark"),

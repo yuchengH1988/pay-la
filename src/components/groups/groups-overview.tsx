@@ -57,12 +57,13 @@ export function GroupsOverview({ user }: { user: User }) {
       <div className="mx-auto grid w-full max-w-6xl gap-6">
         <AppHeader
           leading={<PayLaLogo3D />}
-          eyebrow="Pay La"
+          eyebrow={t("brand.name")}
           title={t("groups.title")}
-          actions={() => (
+          actions={(placement) => (
             <SignedInHeaderActions
               user={user}
               showSignedInLabel
+              layout={placement === "menu" ? "menu" : "inline"}
               onError={setActionError}
             />
           )}

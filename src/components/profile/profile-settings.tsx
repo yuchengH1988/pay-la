@@ -22,9 +22,11 @@ function getErrorMessage(error: unknown) {
 export function ProfileSettings({
   user,
   onError,
+  className,
 }: {
   user: User;
   onError: (message: string | null) => void;
+  className?: string;
 }) {
   const { t } = useI18n();
   const { profiles } = useUserProfiles([user.uid]);
@@ -76,7 +78,7 @@ export function ProfileSettings({
 
   return (
     <>
-      <Button type="button" variant="ghost" onClick={openDialog}>
+      <Button type="button" variant="ghost" className={className} onClick={openDialog}>
         <Icon name="user" />
         {t("profile.title")}
       </Button>

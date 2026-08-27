@@ -55,19 +55,21 @@ export function AuthEntry() {
           bordered={false}
           leading={<PayLaLogo3D />}
           eyebrow={t("auth.productEyebrow")}
-          title="Pay La"
-          actions={
+          title={t("brand.name")}
+          actions={(placement) => (
             <>
-              <LanguageSwitcher />
-              <ThemeToggle />
+              <LanguageSwitcher fullWidth={placement === "menu"} />
+              <ThemeToggle
+                className={placement === "menu" ? "w-full justify-start" : undefined}
+              />
             </>
-          }
+          )}
         />
 
         <section className="grid flex-1 items-center gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
             <Badge tone="accent">{t("auth.heroBadge")}</Badge>
-            <h1 className="type-display max-w-4xl">
+            <h1 className="type-display max-w-4xl whitespace-pre-line">
               {t("auth.heroTitle")}
             </h1>
             <p className="type-small max-w-xl text-muted">

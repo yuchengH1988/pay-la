@@ -8,6 +8,7 @@ export const iconNames = [
   "copy",
   "close",
   "edit",
+  "global",
   "link",
   "menu",
   "moon",

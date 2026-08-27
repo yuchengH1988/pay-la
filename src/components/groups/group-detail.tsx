@@ -119,8 +119,12 @@ export function GroupDetail({
           }
           eyebrow={t("group.workspace")}
           title={loading ? t("common.loading") : group?.name || t("group.titleFallback")}
-          actions={() => (
-            <SignedInHeaderActions user={user} onError={setActionError} />
+          actions={(placement) => (
+            <SignedInHeaderActions
+              user={user}
+              layout={placement === "menu" ? "menu" : "inline"}
+              onError={setActionError}
+            />
           )}
         />
 

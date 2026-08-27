@@ -166,16 +166,18 @@ export function JoinInvitation() {
           bordered={false}
           leading={
             <Link href="/" className="type-h3">
-              Pay La
+              {t("brand.name")}
             </Link>
           }
           title=""
-          actions={
+          actions={(placement) => (
             <>
-              <LanguageSwitcher />
-              <ThemeToggle />
+              <LanguageSwitcher fullWidth={placement === "menu"} />
+              <ThemeToggle
+                className={placement === "menu" ? "w-full justify-start" : undefined}
+              />
             </>
-          }
+          )}
         />
         {content}
         {result ? (

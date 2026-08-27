@@ -6,6 +6,8 @@ import { Button, Dialog, Icon } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
 import { useI18n } from "@/src/i18n";
 
+type AppHeaderActionPlacement = "header" | "menu";
+
 export function AppHeader({
   leading,
   eyebrow,
@@ -17,14 +19,14 @@ export function AppHeader({
   leading: ReactNode;
   eyebrow?: ReactNode;
   title: ReactNode;
-  actions?: ReactNode | (() => ReactNode);
+  actions?: ReactNode | ((placement: AppHeaderActionPlacement) => ReactNode);
   bordered?: boolean;
   className?: string;
 }) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
-  const desktopActions = typeof actions === "function" ? actions() : actions;
-  const menuActions = typeof actions === "function" ? actions() : actions;
+  const desktopActions = typeof actions === "function" ? actions("header") : actions;
+  const menuActions = typeof actions === "function" ? actions("menu") : actions;
 
   return (
     <>
