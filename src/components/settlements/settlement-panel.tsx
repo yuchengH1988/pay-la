@@ -51,6 +51,7 @@ export function SettlementPanel({
   draft,
   onDraftConsumed,
   className,
+  buttonSize = "md",
 }: {
   group: Group;
   currentUserId: string;
@@ -58,6 +59,7 @@ export function SettlementPanel({
   draft: SettlementFormValues | null;
   onDraftConsumed: () => void;
   className?: string;
+  buttonSize?: "md" | "lg";
 }) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -105,6 +107,7 @@ export function SettlementPanel({
     <>
       <Button
         type="button"
+        size={buttonSize}
         className={className}
         onClick={() => {
           setIsOpen(true);

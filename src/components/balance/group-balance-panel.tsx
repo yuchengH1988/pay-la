@@ -79,7 +79,7 @@ export function GroupBalancePanel({
     <Frame
       as="section"
       surface={isSettled ? "surface" : "raised"}
-      className="p-5"
+      className="p-4 sm:p-5"
     >
       <div className="mb-4 flex items-start justify-between gap-3 md:mb-5">
         <div>

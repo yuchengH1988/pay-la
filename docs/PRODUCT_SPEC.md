@@ -3,7 +3,7 @@
 > Shared Expense Tracking & Settlement Web Application
 
 **Status:** MVP  
-**Last Updated:** 2026-08-14
+**Last Updated:** 2026-08-27
 
 ---
 
@@ -12,6 +12,12 @@
 ## 1.1 Product
 
 Pay La 是一個多人共享消費與分帳 Web App。
+
+繁體中文 UI 使用產品名稱：
+
+```text
+Pay啦
+```
 
 適用情境包括：
 
@@ -86,7 +92,7 @@ Pay La MVP 只提供：
 - Apple Login
 - Guest Account
 
-第一次使用 Google 登入時，自動建立 Pay La 使用者。
+第一次使用 Google 登入時，自動建立 Pay啦 使用者。
 
 ---
 
@@ -97,6 +103,12 @@ Pay La MVP 只提供：
 - Display Name
 - Email
 - Profile Image
+
+使用者可以在 Pay La 內設定較短的顯示名稱：
+
+- Short Name
+
+Short Name 只影響 Pay La UI 顯示，不改變 Google Account 資料。
 
 使用者登入後可以：
 
@@ -109,21 +121,23 @@ Pay La MVP 只提供：
 
 ---
 
-## 2.3 Dashboard
+## 2.3 Authenticated Entry
 
-登入後進入 Dashboard。
+登入後進入 Groups Overview。
 
 主要顯示：
 
 - Groups
-- Recent Expenses
-- You Owe
-- You Are Owed
+- Current user's basic information
+- Each Group's member count
+- Each Group's current user's balance preview where available
 
 主要操作：
 
 - Create Group
 - Open Group
+- Sign Out
+- Profile settings
 
 ---
 
@@ -855,11 +869,16 @@ You're all settled up.
 - Google Sign-In
 - Logout
 
-### Dashboard
+### Authenticated Entry
 - Group List
-- Recent Expenses
-- You Owe
-- You Are Owed
+- Current user's basic information
+- Per-Group balance preview where available
+- Create Group
+- Open Group
+
+### Profile
+- Display Google profile basics
+- Set a Pay La short name
 
 ### Group
 - Create Group
@@ -930,7 +949,7 @@ You're all settled up.
 
 ### Account
 - Additional Login Methods
-- Profile Customization
+- Advanced Profile Customization
 
 ### Analytics
 - Category Breakdown

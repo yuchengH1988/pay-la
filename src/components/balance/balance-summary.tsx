@@ -16,8 +16,8 @@ export function BalanceSummary({
 
   if (emphasis === "settled") {
     return (
-      <Frame surface="surface" dashed className="min-w-0 p-4 text-center">
-        <p className="type-label text-muted">{t("balance.title")}</p>
+      <Frame surface="primary" shadow="sm" className="min-w-0 p-4">
+        <p className="type-label">{t("balance.title")}</p>
         <p className="type-amount-md mt-2 break-words">{t("balance.allSettled")}</p>
       </Frame>
     );

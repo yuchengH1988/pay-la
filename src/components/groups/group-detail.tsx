@@ -133,7 +133,7 @@ export function GroupDetail({
           <LoadingCard />
         ) : group ? (
           <section className="grid min-w-0 gap-5 md:grid-cols-[minmax(0,1fr)_360px] md:items-start">
-            <div className="min-w-0 md:col-start-2 md:row-start-1">
+            <div className="hidden min-w-0 md:col-start-2 md:row-start-1 md:block">
               <GroupBalancePanel
                 group={group}
                 currentUserId={user.uid}
@@ -146,7 +146,7 @@ export function GroupDetail({
 
             <Frame
               as="section"
-              className="min-w-0 p-3 md:col-start-2 md:row-start-2 md:p-5"
+              className="hidden min-w-0 md:col-start-2 md:row-start-2 md:block md:p-5"
             >
               <div className="mb-3 hidden md:block">
                 <p className="type-label">{t("group.actions")}</p>
@@ -154,29 +154,33 @@ export function GroupDetail({
                   {t("group.actionsDescription")}
                 </p>
               </div>
-              <div className="max-w-full overflow-x-auto pb-1 md:overflow-visible md:pb-0">
-                <div className="flex w-max max-w-none gap-2 p-1 md:grid md:w-full md:max-w-full md:pr-0">
+              <div className="grid gap-2 md:gap-3">
+                <div className="hidden md:block">
                   <Button
                     type="button"
                     size="lg"
-                    className="hidden shrink-0 md:inline-flex md:w-full"
+                    className="w-full"
                     onClick={() => setIsAddingExpense(true)}
                   >
                     <Icon name="plus" />
                     {t("action.addExpense")}
                   </Button>
+                </div>
+                <div>
                   <SettlementPanel
                     group={group}
                     currentUserId={user.uid}
                     memberProfiles={profiles}
                     draft={settlementDraft}
                     onDraftConsumed={handleSettlementDraftConsumed}
-                    className="shrink-0 bg-secondary text-secondary-foreground md:w-full"
+                    className="w-full bg-secondary text-secondary-foreground"
                   />
+                </div>
+                <div className="hidden md:block">
                   <Button
                     type="button"
                     variant="ghost"
-                    className="shrink-0 md:w-full"
+                    className="w-full"
                     onClick={() => setIsGroupMenuOpen(true)}
                   >
                     <Icon name="settings" />
@@ -198,15 +202,26 @@ export function GroupDetail({
               />
             </div>
 
-            <Button
-              type="button"
-              size="lg"
-              className="fixed bottom-5 right-4 z-40 md:hidden"
-              onClick={() => setIsAddingExpense(true)}
-            >
-              <Icon name="plus" />
-              {t("action.addExpense")}
-            </Button>
+            <div className="fixed inset-x-4 bottom-5 z-40 grid grid-cols-2 gap-2 md:hidden">
+              <SettlementPanel
+                group={group}
+                currentUserId={user.uid}
+                memberProfiles={profiles}
+                draft={settlementDraft}
+                onDraftConsumed={handleSettlementDraftConsumed}
+                buttonSize="lg"
+                className="w-full bg-secondary px-3 text-secondary-foreground"
+              />
+              <Button
+                type="button"
+                size="lg"
+                className="w-full px-3"
+                onClick={() => setIsAddingExpense(true)}
+              >
+                <Icon name="plus" />
+                {t("action.addExpense")}
+              </Button>
+            </div>
 
             <Dialog
               open={isAddingExpense}

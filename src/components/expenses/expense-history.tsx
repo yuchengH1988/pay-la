@@ -55,6 +55,43 @@ type DeleteTarget =
   | { type: "expense"; id: string }
   | { type: "settlement"; id: string };
 
+function HistoryDateBlock({ month, day }: { month: string; day: string }) {
+  return (
+    <div className="shrink-0 text-muted">
+      <p className="font-sans text-xs font-bold uppercase leading-none">{month}</p>
+      <p className="font-amount text-lg font-black leading-none sm:text-xl">{day}</p>
+    </div>
+  );
+}
+
+function HistoryAmountBlock({
+  amount,
+  meta,
+  tone,
+}: {
+  amount: string;
+  meta: string;
+  tone: "positive" | "negative" | "neutral";
+}) {
+  return (
+    <div className="min-w-0 text-right">
+      <p className="font-amount break-words text-sm font-black leading-none sm:text-lg">
+        {amount}
+      </p>
+      <p
+        className={cx(
+          "mt-1 break-words font-sans text-xs font-bold leading-tight sm:mt-2",
+          tone === "positive" && "text-success",
+          tone === "negative" && "text-danger",
+          tone === "neutral" && "text-muted",
+        )}
+      >
+        {meta}
+      </p>
+    </div>
+  );
+}
+
 export function ExpenseHistory({
   group,
   currentUserId,
@@ -201,44 +238,47 @@ export function ExpenseHistory({
         : settlement.receiverId === currentUserId
           ? { label: t("settlement.youReceived"), amount: settlement.amountMinor, tone: "positive" }
           : { label: t("settlement.recorded"), amount: settlement.amountMinor, tone: "neutral" };
+    const amount = formatAmountFromMinor(settlement.amountMinor, group.currency);
+    const meta = `${rowMeta.label} ${formatAmountFromMinor(
+      rowMeta.amount,
+      group.currency,
+    )}`;
 
     return (
-      <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
-        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_auto] sm:gap-4">
-          <div className="text-muted">
-            <p className="type-caption">{date.month}</p>
-            <p className="font-amount text-2xl font-black leading-none">{date.day}</p>
+      <article className="border-b-[3px] border-border bg-surface px-3 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_minmax(8rem,auto)] sm:items-center sm:gap-4">
+          <div className="hidden sm:block">
+            <HistoryDateBlock month={date.month} day={date.day} />
           </div>
-          <div className="min-w-0">
-            <div className="mb-1 flex flex-wrap items-center gap-2">
-              <Badge tone="primary">
-                <Icon name="wallet" className="size-3" />
-                {t("settlement.title")}
-              </Badge>
+          <div className="grid min-w-0 gap-3 sm:contents">
+            <div className="flex min-w-0 items-start justify-between gap-3 sm:hidden">
+              <HistoryDateBlock month={date.month} day={date.day} />
+              <HistoryAmountBlock
+                amount={amount}
+                meta={meta}
+                tone={rowMeta.tone as "positive" | "negative" | "neutral"}
+              />
             </div>
-            <p className="type-label truncate">
-              {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)}{" "}
-              {t("settlement.paid")}{" "}
-              {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
-            </p>
-            <p className="type-caption mt-1 truncate text-muted">
-              {t("settlement.balanceRepayment")}
-            </p>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <Icon name="wallet" className="size-5 text-primary" />
+                <p className="min-w-0 truncate font-sans text-sm font-bold leading-5 text-foreground">
+                  {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)}{" "}
+                  {t("settlement.paid")}{" "}
+                  {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
+                </p>
+              </div>
+              <p className="mt-1 truncate font-sans text-xs font-semibold leading-4 text-muted">
+                {t("settlement.balanceRepayment")}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 text-right">
-            <p className="font-amount whitespace-nowrap text-base font-black leading-none sm:text-xl">
-              {formatAmountFromMinor(settlement.amountMinor, group.currency)}
-            </p>
-            <p
-              className={cx(
-                "type-caption mt-2 whitespace-nowrap",
-                rowMeta.tone === "positive" && "text-success",
-                rowMeta.tone === "negative" && "text-danger",
-                rowMeta.tone === "neutral" && "text-muted",
-              )}
-            >
-              {rowMeta.label} {formatAmountFromMinor(rowMeta.amount, group.currency)}
-            </p>
+          <div className="hidden sm:block">
+            <HistoryAmountBlock
+              amount={amount}
+              meta={meta}
+              tone={rowMeta.tone as "positive" | "negative" | "neutral"}
+            />
           </div>
         </div>
       </article>
@@ -284,42 +324,47 @@ export function ExpenseHistory({
           : currentUserShare > 0
             ? { label: t("expense.settledShare"), amount: currentUserShare, tone: "neutral" }
             : { label: t("expense.amount"), amount: expense.amountMinor, tone: "neutral" };
+    const amount = formatAmountFromMinor(expense.amountMinor, group.currency);
+    const meta = `${rowMeta.label} ${formatAmountFromMinor(
+      rowMeta.amount,
+      group.currency,
+    )}`;
 
     return (
-      <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
-        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_auto] sm:gap-4">
-          <div className="text-muted">
-            <p className="type-caption">{date.month}</p>
-            <p className="font-amount text-2xl font-black leading-none">{date.day}</p>
+      <article className="border-b-[3px] border-border bg-surface px-3 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_minmax(8rem,auto)] sm:items-center sm:gap-4">
+          <div className="hidden sm:block">
+            <HistoryDateBlock month={date.month} day={date.day} />
           </div>
-          <div className="min-w-0">
-            <div className="mb-1 flex flex-wrap items-center gap-2">
-              <Badge tone="accent">
-                <Icon name="receipt" className="size-3" />
-                {categoryLabel(expense.category)}
-              </Badge>
+          <div className="grid min-w-0 gap-3 sm:contents">
+            <div className="flex min-w-0 items-start justify-between gap-3 sm:hidden">
+              <HistoryDateBlock month={date.month} day={date.day} />
+              <HistoryAmountBlock
+                amount={amount}
+                meta={meta}
+                tone={rowMeta.tone as "positive" | "negative" | "neutral"}
+              />
             </div>
-            <p className="type-label truncate">{expense.name}</p>
-            <p className="type-caption mt-1 truncate text-muted">
-              {t("expense.paidBy")}{" "}
-              {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
-              {participantText ? ` / ${participantText}` : ""}
-            </p>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <Icon name="receipt" className="size-5 text-accent" />
+                <p className="min-w-0 truncate font-sans text-sm font-bold leading-5 text-foreground">
+                  {expense.name}
+                </p>
+              </div>
+              <p className="mt-1 truncate font-sans text-xs font-semibold leading-4 text-muted">
+                {t("expense.paidBy")}{" "}
+                {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
+                {participantText ? ` / ${participantText}` : ""}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 text-right">
-            <p className="font-amount whitespace-nowrap text-base font-black leading-none sm:text-xl">
-              {formatAmountFromMinor(expense.amountMinor, group.currency)}
-            </p>
-            <p
-              className={cx(
-                "type-caption mt-2 whitespace-nowrap",
-                rowMeta.tone === "positive" && "text-success",
-                rowMeta.tone === "negative" && "text-danger",
-                rowMeta.tone === "neutral" && "text-muted",
-              )}
-            >
-              {rowMeta.label} {formatAmountFromMinor(rowMeta.amount, group.currency)}
-            </p>
+          <div className="hidden sm:block">
+            <HistoryAmountBlock
+              amount={amount}
+              meta={meta}
+              tone={rowMeta.tone as "positive" | "negative" | "neutral"}
+            />
           </div>
         </div>
       </article>
@@ -371,7 +416,7 @@ export function ExpenseHistory({
   }
 
   return (
-    <Frame as="section" className="min-w-0 p-4 sm:p-6">
+    <Frame as="section" className="min-w-0 p-4 pb-28 sm:p-6 md:pb-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="type-h2">{t("expense.historyTitle")}</h2>
@@ -379,9 +424,11 @@ export function ExpenseHistory({
             {t("expense.historyDescription")}
           </p>
         </div>
-        <Badge tone="muted">
+        <div className="hidden sm:block">
+        <Badge tone="muted" className="self-start">
           {t("history.recordCount", { count: historyItems.length })}
         </Badge>
+        </div>
       </div>
 
       {loading ? (

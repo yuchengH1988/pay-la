@@ -4,9 +4,11 @@ import { cx } from "./cx";
 export function Badge({
   children,
   tone = "primary",
+  className,
 }: {
   children: ReactNode;
   tone?: "primary" | "accent" | "danger" | "muted";
+  className?: string;
 }) {
   return (
     <span
@@ -16,6 +18,7 @@ export function Badge({
         tone === "accent" && "bg-accent text-accent-foreground",
         tone === "danger" && "bg-danger text-foreground",
         tone === "muted" && "bg-muted-surface text-foreground",
+        className,
       )}
     >
       {children}
