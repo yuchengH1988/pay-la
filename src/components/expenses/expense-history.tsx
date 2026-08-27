@@ -10,6 +10,7 @@ import {
   Frame,
   LoadingCard,
 } from "@/src/components/ui";
+import { cx } from "@/src/components/ui/cx";
 import { SettlementForm } from "@/src/components/settlements";
 import {
   deleteExpense,
@@ -43,6 +44,15 @@ function settlementToFormValues(settlement: Settlement): SettlementFormValues {
     amount: (settlement.amountMinor / 100).toFixed(2),
     date: settlement.date.toDate().toISOString().slice(0, 10),
     note: settlement.note,
+  };
+}
+
+function formatHistoryDate(date: Expense["date"]) {
+  const value = date.toDate();
+
+  return {
+    month: value.toLocaleDateString("en-US", { month: "short" }),
+    day: value.toLocaleDateString("en-US", { day: "numeric" }),
   };
 }
 
@@ -182,6 +192,52 @@ export function ExpenseHistory({
     );
   }
 
+  function renderSettlementRow(settlement: Settlement) {
+    const date = formatHistoryDate(settlement.date);
+    const rowMeta =
+      settlement.payerId === currentUserId
+        ? { label: "You paid", amount: settlement.amountMinor, tone: "negative" }
+        : settlement.receiverId === currentUserId
+          ? { label: "You received", amount: settlement.amountMinor, tone: "positive" }
+          : { label: "Recorded", amount: settlement.amountMinor, tone: "neutral" };
+
+    return (
+      <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
+        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_auto] sm:gap-4">
+          <div className="text-muted">
+            <p className="type-caption">{date.month}</p>
+            <p className="font-amount text-2xl font-black leading-none">{date.day}</p>
+          </div>
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <Badge tone="primary">Settlement</Badge>
+            </div>
+            <p className="type-label truncate">
+              {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)} paid{" "}
+              {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
+            </p>
+            <p className="type-caption mt-1 truncate text-muted">Balance repayment</p>
+          </div>
+          <div className="min-w-0 text-right">
+            <p className="font-amount whitespace-nowrap text-base font-black leading-none sm:text-xl">
+              {formatAmountFromMinor(settlement.amountMinor, group.currency)}
+            </p>
+            <p
+              className={cx(
+                "type-caption mt-2 whitespace-nowrap",
+                rowMeta.tone === "positive" && "text-success",
+                rowMeta.tone === "negative" && "text-danger",
+                rowMeta.tone === "neutral" && "text-muted",
+              )}
+            >
+              {rowMeta.label} {formatAmountFromMinor(rowMeta.amount, group.currency)}
+            </p>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   function renderExpenseSummary(expense: Expense) {
     const participantText = getParticipantText(expense);
 
@@ -202,6 +258,59 @@ export function ExpenseHistory({
           <p className="type-small mt-1 text-muted">{participantText}</p>
         ) : null}
       </>
+    );
+  }
+
+  function renderExpenseRow(expense: Expense) {
+    const date = formatHistoryDate(expense.date);
+    const participantText = getParticipantText(expense);
+    const currentUserShare =
+      expense.participants[currentUserId]?.resolvedAmountMinor ?? 0;
+    const currentUserPaid = expense.paidBy === currentUserId ? expense.amountMinor : 0;
+    const currentUserNet = currentUserPaid - currentUserShare;
+    const rowMeta =
+      currentUserNet > 0
+        ? { label: "You covered", amount: currentUserNet, tone: "positive" }
+        : currentUserNet < 0
+          ? { label: "Your share", amount: Math.abs(currentUserNet), tone: "negative" }
+          : currentUserShare > 0
+            ? { label: "Settled share", amount: currentUserShare, tone: "neutral" }
+            : { label: "Total", amount: expense.amountMinor, tone: "neutral" };
+
+    return (
+      <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
+        <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[4.25rem_minmax(0,1fr)_auto] sm:gap-4">
+          <div className="text-muted">
+            <p className="type-caption">{date.month}</p>
+            <p className="font-amount text-2xl font-black leading-none">{date.day}</p>
+          </div>
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <Badge tone="accent">{expenseCategoryLabels[expense.category]}</Badge>
+            </div>
+            <p className="type-label truncate">{expense.name}</p>
+            <p className="type-caption mt-1 truncate text-muted">
+              Paid by {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
+              {participantText ? ` / ${participantText}` : ""}
+            </p>
+          </div>
+          <div className="min-w-0 text-right">
+            <p className="font-amount whitespace-nowrap text-base font-black leading-none sm:text-xl">
+              {formatAmountFromMinor(expense.amountMinor, group.currency)}
+            </p>
+            <p
+              className={cx(
+                "type-caption mt-2 whitespace-nowrap",
+                rowMeta.tone === "positive" && "text-success",
+                rowMeta.tone === "negative" && "text-danger",
+                rowMeta.tone === "neutral" && "text-muted",
+              )}
+            >
+              {rowMeta.label} {formatAmountFromMinor(rowMeta.amount, group.currency)}
+            </p>
+          </div>
+        </div>
+      </article>
     );
   }
 
@@ -247,12 +356,12 @@ export function ExpenseHistory({
   }
 
   return (
-    <Frame as="section" className="min-w-0 p-4 sm:p-5">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <Frame as="section" className="min-w-0 p-4 sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="type-h2">Group history</h2>
-          <p className="type-small mt-2 text-muted">
-            Expenses and settlements feed the group balance.
+          <p className="type-small mt-2 max-w-xl text-muted">
+            A running record of expenses and repayments.
           </p>
         </div>
         <Badge tone="muted">{historyItems.length} records</Badge>
@@ -273,16 +382,7 @@ export function ExpenseHistory({
                   className="block w-full text-left"
                   onClick={() => setSelectedItem(item)}
                 >
-                  <article className="border-b-[3px] border-border bg-surface px-1 py-4 transition-colors hover:bg-muted-surface last:border-b-0">
-                    <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-                      <div className="min-w-0">
-                        {renderSettlementSummary(settlement)}
-                      </div>
-                      <p className="type-amount-md min-w-0 break-words text-left sm:text-right">
-                        {formatAmountFromMinor(settlement.amountMinor, group.currency)}
-                      </p>
-                    </div>
-                  </article>
+                  {renderSettlementRow(settlement)}
                 </button>
               );
             }
@@ -296,16 +396,7 @@ export function ExpenseHistory({
                 className="block w-full text-left"
                 onClick={() => setSelectedItem(item)}
               >
-                <article className="border-b-[3px] border-border bg-surface px-1 py-4 transition-colors hover:bg-muted-surface last:border-b-0">
-                  <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-                    <div className="min-w-0">
-                      {renderExpenseSummary(expense)}
-                    </div>
-                    <p className="type-amount-md min-w-0 break-words text-left sm:text-right">
-                      {formatAmountFromMinor(expense.amountMinor, group.currency)}
-                    </p>
-                  </div>
-                </article>
+                {renderExpenseRow(expense)}
               </button>
             );
           })}
