@@ -63,12 +63,30 @@ export function GroupBalancePanel({
   const isSettled =
     (balance.currentUserSummary?.owesMinor ?? 0) === 0 &&
     (balance.currentUserSummary?.isOwedMinor ?? 0) === 0;
+  const owesMinor = balance.currentUserSummary?.owesMinor ?? 0;
+  const isOwedMinor = balance.currentUserSummary?.isOwedMinor ?? 0;
+  const balanceEmphasis = isSettled
+    ? "settled"
+    : owesMinor > isOwedMinor
+      ? "owes"
+      : isOwedMinor > owesMinor
+        ? "owed"
+        : "mixed";
 
   return (
-    <Frame as="section" className="p-5">
+    <Frame
+      as="section"
+      surface={isSettled ? "surface" : "raised"}
+      className="p-5"
+    >
       <div className="mb-4 flex items-start justify-between gap-3 md:mb-5">
         <div>
           <h2 className="type-h3">Balance</h2>
+          <p className="type-small mt-2 hidden text-muted md:block">
+            {isSettled
+              ? "No one needs to pay anything back right now."
+              : "Settle the open balance when money changes hands."}
+          </p>
         </div>
         <Badge tone="muted">{group.currency}</Badge>
       </div>
@@ -82,7 +100,7 @@ export function GroupBalancePanel({
           balance.currentUserSummary?.isOwedMinor ?? 0,
           group.currency,
         )}
-        settled={isSettled}
+        emphasis={balanceEmphasis}
       />
 
       <div className="mt-4 hidden md:block">
@@ -109,7 +127,7 @@ export function GroupBalancePanel({
         </div>
       </div>
 
-      {balance.simplifiedDebts.length > 0 ? (
+      {!isSettled && balance.simplifiedDebts.length > 0 ? (
         <div className="mt-5 hidden md:block">
           <h3 className="type-label">Settlement suggestions</h3>
           <div className="mt-3 grid gap-3">
