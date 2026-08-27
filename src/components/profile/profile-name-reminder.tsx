@@ -4,10 +4,11 @@ import type { User } from "firebase/auth";
 import { useState, type FormEvent } from "react";
 import { Button, Dialog, Frame, Icon, TextInput } from "@/src/components/ui";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
+import { useI18n } from "@/src/i18n";
 import { updateUserProfileName } from "@/src/services/users";
 
-function getFallbackName(user: User) {
-  return user.displayName || user.email || "Pay La user";
+function getFallbackName(user: User, fallbackName: string) {
+  return user.displayName || user.email || fallbackName;
 }
 
 function getErrorMessage(error: unknown) {
@@ -25,6 +26,7 @@ export function ProfileNameReminder({
   user: User;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useI18n();
   const { profiles } = useUserProfiles([user.uid]);
   const profile = profiles[user.uid];
   const [dismissed, setDismissed] = useState(false);
@@ -43,12 +45,12 @@ export function ProfileNameReminder({
     const nextShortName = shortName.trim();
 
     if (!nextShortName) {
-      setFieldError("Name is required.");
+      setFieldError(t("profile.nameRequired"));
       return;
     }
 
     if (nextShortName.length > 32) {
-      setFieldError("Keep the name under 32 characters.");
+      setFieldError(t("profile.nameLength"));
       return;
     }
 
@@ -61,7 +63,7 @@ export function ProfileNameReminder({
       setOpen(false);
       setDismissed(true);
     } catch (error) {
-      onError(getErrorMessage(error));
+      onError(getErrorMessage(error) || t("profile.error"));
     } finally {
       setSaving(false);
     }
@@ -72,9 +74,9 @@ export function ProfileNameReminder({
       <Frame surface="secondary" shadow="sm" className="p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="type-h3">Set a short name</p>
+            <p className="type-h3">{t("profile.reminderTitle")}</p>
             <p className="type-small mt-2 max-w-xl text-secondary-foreground/80">
-              Use a cleaner name in expenses, balances, and group history.
+              {t("profile.reminderDescription")}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -88,10 +90,10 @@ export function ProfileNameReminder({
               }}
             >
               <Icon name="user" />
-              Set Name
+              {t("profile.setName")}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setDismissed(true)}>
-              Later
+              {t("profile.later")}
             </Button>
           </div>
         </div>
@@ -99,17 +101,17 @@ export function ProfileNameReminder({
 
       <Dialog
         open={open}
-        title="Short Name"
-        description="This name is only used inside Pay La."
+        title={t("profile.shortName")}
+        description={t("profile.shortNameDescription")}
         onClose={() => setOpen(false)}
       >
         <form className="grid gap-4" onSubmit={handleSubmit}>
           <TextInput
-            label="Short name"
+            label={t("profile.shortName")}
             value={shortName}
             error={fieldError ?? undefined}
             maxLength={32}
-            placeholder={getFallbackName(user)}
+            placeholder={getFallbackName(user, t("profile.defaultName"))}
             onChange={(event) => {
               setFieldError(null);
               setShortName(event.target.value);
@@ -117,11 +119,11 @@ export function ProfileNameReminder({
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
+              {t("action.cancel")}
             </Button>
             <Button type="submit" loading={saving}>
               <Icon name="check" />
-              Save Name
+              {t("profile.saveName")}
             </Button>
           </div>
         </form>

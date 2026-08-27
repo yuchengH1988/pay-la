@@ -8,6 +8,7 @@ import {
   Frame,
   Icon,
 } from "@/src/components/ui";
+import { useI18n } from "@/src/i18n";
 import {
   createSettlement,
 } from "@/src/services/settlements";
@@ -58,6 +59,7 @@ export function SettlementPanel({
   onDraftConsumed: () => void;
   className?: string;
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingValues, setPendingValues] = useState<SettlementFormValues | null>(null);
@@ -91,7 +93,7 @@ export function SettlementPanel({
       setPendingValues(null);
       setIsOpen(false);
       onDraftConsumed();
-      setSuccessMessage("Settlement recorded.");
+      setSuccessMessage(t("settlement.success"));
     } catch (settlementError) {
       setActionError(getErrorMessage(settlementError));
     } finally {
@@ -113,13 +115,13 @@ export function SettlementPanel({
         }}
       >
         <Icon name="wallet" />
-        Settle Up
+        {t("action.settleUp")}
       </Button>
 
       <Dialog
         open={isDialogOpen}
-        title={pendingValues ? "Confirm Settlement" : "Settle Up"}
-        description="Record a repayment without changing expense history."
+        title={pendingValues ? t("settlement.confirmDialogTitle") : t("action.settleUp")}
+        description={t("settlement.description")}
         onClose={closeDialog}
       >
         {!pendingValues ? (
@@ -129,21 +131,21 @@ export function SettlementPanel({
             currentUserId={currentUserId}
             memberProfiles={memberProfiles}
             initialValues={draft ?? undefined}
-            submitLabel="Review Settlement"
+            submitLabel={t("action.reviewSettlement")}
             onSubmit={handlePrepareSettlement}
             onCancel={closeDialog}
           />
         ) : (
           <Frame surface="surface" shadow="sm" className="grid gap-4 p-4">
             <div>
-              <p className="type-label">Confirm settlement</p>
+              <p className="type-label">{t("settlement.confirmTitle")}</p>
               <p className="type-small mt-2 text-muted">
                 {formatMemberLabel(
                   pendingValues.payerId,
                   currentUserId,
                   memberProfiles,
                 )}{" "}
-                pays{" "}
+                {t("settlement.pays")}{" "}
                 {formatMemberLabel(
                   pendingValues.receiverId,
                   currentUserId,
@@ -164,14 +166,14 @@ export function SettlementPanel({
                 onClick={handleConfirmSettlement}
               >
                 <Icon name="check" />
-                Confirm
+                {t("action.confirm")}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setPendingValues(null)}
               >
-                Back
+                {t("action.back")}
               </Button>
             </div>
           </Frame>
@@ -180,7 +182,7 @@ export function SettlementPanel({
 
       {successMessage ? (
         <div>
-          <Alert title="Settlement saved" tone="success">
+          <Alert title={t("settlement.saved")} tone="success">
             {successMessage}
           </Alert>
         </div>
@@ -188,7 +190,7 @@ export function SettlementPanel({
 
       {actionError ? (
         <div>
-          <Alert title="Settlement error" tone="danger">
+          <Alert title={t("settlement.error")} tone="danger">
             {actionError}
           </Alert>
         </div>

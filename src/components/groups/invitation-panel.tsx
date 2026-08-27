@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Alert, Badge, Button, Frame, Icon } from "@/src/components/ui";
+import { useI18n } from "@/src/i18n";
 import { createInvitation } from "@/src/services/invitations";
 import type { Group } from "@/src/types/group";
 
@@ -28,6 +29,7 @@ export function InvitationPanel({
   group: Group;
   userId: string;
 }) {
+  const { t } = useI18n();
   const [invitationId, setInvitationId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -63,7 +65,7 @@ export function InvitationPanel({
       await window.navigator.clipboard.writeText(invitationUrl);
       setCopied(true);
     } catch {
-      setError("Copy failed. Select and copy the link manually.");
+      setError(t("invitation.copyFailed"));
     }
   }
 
@@ -71,9 +73,9 @@ export function InvitationPanel({
     <Frame as="section" className="p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h2 className="type-h3">Invite</h2>
+          <h2 className="type-h3">{t("invitation.title")}</h2>
           <p className="type-small mt-2 text-muted">
-            Invitations are single-use and expire after 24 hours.
+            {t("invitation.description")}
           </p>
         </div>
         <Badge tone={isFull ? "danger" : "accent"}>
@@ -82,19 +84,19 @@ export function InvitationPanel({
       </div>
 
       {isFull ? (
-        <Alert title="Group full" tone="warning">
-          This group already has 30 members.
+        <Alert title={t("invitation.fullTitle")} tone="warning">
+          {t("invitation.fullDescription")}
         </Alert>
       ) : invitationId ? (
         <div className="grid gap-3">
           <div className="border-[3px] border-border bg-background p-3 shadow-hard-sm">
-            <p className="type-caption mb-2 text-muted">Invitation link</p>
+            <p className="type-caption mb-2 text-muted">{t("invitation.link")}</p>
             <code className="type-small block break-all">{invitationUrl}</code>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Button type="button" onClick={handleCopyInvitation}>
               <Icon name={copied ? "check" : "copy"} />
-              {copied ? "Copied" : "Copy Link"}
+              {copied ? t("action.copied") : t("action.copyLink")}
             </Button>
             <Button
               type="button"
@@ -103,7 +105,7 @@ export function InvitationPanel({
               onClick={handleCreateInvitation}
             >
               <Icon name="link" />
-              New Link
+              {t("action.newLink")}
             </Button>
           </div>
         </div>
@@ -115,13 +117,13 @@ export function InvitationPanel({
           className="w-full"
         >
           <Icon name="link" />
-          Create Invitation
+          {t("action.createInvitation")}
         </Button>
       )}
 
       {error ? (
         <div className="mt-4">
-          <Alert title="Invitation error" tone="danger">
+          <Alert title={t("invitation.error")} tone="danger">
             {error}
           </Alert>
         </div>

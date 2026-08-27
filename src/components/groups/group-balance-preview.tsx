@@ -6,19 +6,20 @@ import { formatAmountFromMinor } from "@/src/services/expenses";
 import { useExpenses } from "@/src/hooks/use-expenses";
 import { useSettlements } from "@/src/hooks/use-settlements";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
+import { useI18n } from "@/src/i18n";
 import type { Group } from "@/src/types/group";
 import { formatMemberLabel } from "@/src/utils/member-label";
 
-function getTotalLabel(netAmountMinor: number) {
+function getTotalLabel(netAmountMinor: number, t: ReturnType<typeof useI18n>["t"]) {
   if (netAmountMinor > 0) {
-    return "You are owed";
+    return t("balance.youAreOwed");
   }
 
   if (netAmountMinor < 0) {
-    return "You owe";
+    return t("balance.youOwe");
   }
 
-  return "Settled";
+  return t("balance.settled");
 }
 
 export function GroupBalancePreview({
@@ -28,6 +29,7 @@ export function GroupBalancePreview({
   group: Group;
   currentUserId: string;
 }) {
+  const { t } = useI18n();
   const { expenses, loading: expensesLoading, error: expensesError } = useExpenses(group.id);
   const {
     settlements,
@@ -53,7 +55,7 @@ export function GroupBalancePreview({
   if (expensesLoading || settlementsLoading) {
     return (
       <p className="type-small text-muted" aria-live="polite">
-        Loading your balance...
+        {t("balance.loadingPreview")}
       </p>
     );
   }
@@ -61,7 +63,7 @@ export function GroupBalancePreview({
   if (expensesError || settlementsError) {
     return (
       <p className="type-small text-danger">
-        Unable to load your balance.
+        {t("balance.unablePreview")}
       </p>
     );
   }
@@ -69,7 +71,7 @@ export function GroupBalancePreview({
   return (
     <div className="grid gap-2">
       <p className="type-small text-muted">
-        {getTotalLabel(currentNetAmount)}{" "}
+        {getTotalLabel(currentNetAmount, t)}{" "}
         <span className="font-mono font-black text-foreground">
           {formatAmountFromMinor(Math.abs(currentNetAmount), group.currency)}
         </span>
@@ -87,7 +89,9 @@ export function GroupBalancePreview({
                 key={`${debt.fromUserId}-${debt.toUserId}-${debt.amountMinor}`}
                 className="type-caption text-muted"
               >
-                {isCurrentUserOwing ? "You owe" : `${otherLabel} owes you`}{" "}
+                {isCurrentUserOwing
+                  ? t("balance.youOwe")
+                  : t("balance.owesYou", { name: otherLabel })}{" "}
                 {isCurrentUserOwing ? otherLabel : ""}{" "}
                 <span className="text-foreground">
                   {formatAmountFromMinor(debt.amountMinor, group.currency)}
@@ -98,7 +102,7 @@ export function GroupBalancePreview({
         </div>
       ) : (
         <p className="type-caption text-muted">
-          No open balances with members.
+          {t("balance.noOpenBalances")}
         </p>
       )}
     </div>

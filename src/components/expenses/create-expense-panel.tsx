@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Alert, Button, Dialog, Frame, Icon } from "@/src/components/ui";
+import { useI18n } from "@/src/i18n";
 import { createExpense } from "@/src/services/expenses";
 import type { ExpenseFormValues } from "@/src/types/expense";
 import type { Group } from "@/src/types/group";
@@ -27,6 +28,7 @@ export function CreateExpensePanel({
   memberProfiles: UserProfileMap;
   onCreated?: () => void;
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,25 +52,25 @@ export function CreateExpensePanel({
     <Frame as="section" className="p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h2 className="type-h3">Add Expense</h2>
+          <h2 className="type-h3">{t("action.addExpense")}</h2>
         </div>
         <Button type="button" onClick={() => setIsOpen(true)}>
           <Icon name="plus" />
-          Add
+          {t("action.add")}
         </Button>
       </div>
 
       <Dialog
         open={isOpen}
-        title="Add Expense"
-        description="Store the expense with resolved participant shares."
+        title={t("action.addExpense")}
+        description={t("expense.storeDescription")}
         onClose={() => setIsOpen(false)}
       >
         <ExpenseForm
           group={group}
           currentUserId={currentUserId}
           memberProfiles={memberProfiles}
-          submitLabel="Create Expense"
+          submitLabel={t("action.createExpense")}
           loading={isSaving}
           onSubmit={handleCreateExpense}
           onCancel={() => setIsOpen(false)}
@@ -77,7 +79,7 @@ export function CreateExpensePanel({
 
       {error ? (
         <div className="mt-4">
-          <Alert title="Expense error" tone="danger">
+          <Alert title={t("expense.error")} tone="danger">
             {error}
           </Alert>
         </div>

@@ -15,6 +15,7 @@ import {
 import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { useGroup } from "@/src/hooks/use-group";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
+import { useI18n } from "@/src/i18n";
 import { updateGroup } from "@/src/services/groups";
 import { ExpenseHistory } from "@/src/components/expenses";
 import { ExpenseForm } from "@/src/components/expenses/expense-form";
@@ -44,6 +45,7 @@ export function GroupDetail({
   groupId: string;
   user: User;
 }) {
+  const { t } = useI18n();
   const { group, loading, error } = useGroup(groupId);
   const { profiles, error: profilesError } = useUserProfiles(group?.memberIds ?? []);
   const {
@@ -110,13 +112,13 @@ export function GroupDetail({
             <Link
               href="/"
               className="type-control grid size-12 place-items-center border-[3px] border-border bg-primary text-primary-foreground shadow-hard-sm"
-              aria-label="Back to groups"
+              aria-label={t("action.backToGroups")}
             >
               <Icon name="arrow-left" />
             </Link>
           }
-          eyebrow="Group workspace"
-          title={loading ? "Loading" : group?.name || "Group"}
+          eyebrow={t("group.workspace")}
+          title={loading ? t("common.loading") : group?.name || t("group.titleFallback")}
           actions={() => (
             <SignedInHeaderActions user={user} onError={setActionError} />
           )}
@@ -142,8 +144,10 @@ export function GroupDetail({
               className="min-w-0 p-3 md:col-start-2 md:row-start-2 md:p-5"
             >
               <div className="mb-3 hidden md:block">
-                <p className="type-label">Actions</p>
-                <p className="type-caption mt-1 text-muted">Add, settle, or manage this group.</p>
+                <p className="type-label">{t("group.actions")}</p>
+                <p className="type-caption mt-1 text-muted">
+                  {t("group.actionsDescription")}
+                </p>
               </div>
               <div className="max-w-full overflow-x-auto pb-1 md:overflow-visible md:pb-0">
                 <div className="flex w-max max-w-none gap-2 p-1 md:grid md:w-full md:max-w-full md:pr-0">
@@ -154,7 +158,7 @@ export function GroupDetail({
                     onClick={() => setIsAddingExpense(true)}
                   >
                     <Icon name="plus" />
-                    Add Expense
+                    {t("action.addExpense")}
                   </Button>
                   <SettlementPanel
                     group={group}
@@ -171,7 +175,7 @@ export function GroupDetail({
                     onClick={() => setIsGroupMenuOpen(true)}
                   >
                     <Icon name="settings" />
-                    Group Settings
+                    {t("action.groupSettings")}
                   </Button>
                 </div>
               </div>
@@ -196,19 +200,19 @@ export function GroupDetail({
               onClick={() => setIsAddingExpense(true)}
             >
               <Icon name="plus" />
-              Add Expense
+              {t("action.addExpense")}
             </Button>
 
             <Dialog
               open={isAddingExpense}
-              title="Add Expense"
+              title={t("action.addExpense")}
               onClose={() => setIsAddingExpense(false)}
             >
               <ExpenseForm
                 group={group}
                 currentUserId={user.uid}
                 memberProfiles={profiles}
-                submitLabel="Create Expense"
+                submitLabel={t("action.createExpense")}
                 loading={isCreatingExpense}
                 onSubmit={handleCreateExpense}
                 onCancel={() => setIsAddingExpense(false)}
@@ -217,7 +221,7 @@ export function GroupDetail({
 
             <Dialog
               open={isGroupMenuOpen}
-              title="Group Settings"
+              title={t("action.groupSettings")}
               onClose={() => setIsGroupMenuOpen(false)}
             >
               <div className="grid gap-3">
@@ -230,7 +234,7 @@ export function GroupDetail({
                   }}
                 >
                   <Icon name="edit" />
-                  Edit Group
+                  {t("action.editGroup")}
                 </Button>
                 <Button
                   type="button"
@@ -241,7 +245,7 @@ export function GroupDetail({
                   }}
                 >
                   <Icon name="user" />
-                  Members
+                  {t("members.title")}
                 </Button>
                 <Button
                   type="button"
@@ -252,15 +256,15 @@ export function GroupDetail({
                   }}
                 >
                   <Icon name="link" />
-                  Create Invitation
+                  {t("action.createInvitation")}
                 </Button>
               </div>
             </Dialog>
 
             <Dialog
               open={isEditing}
-              title="Edit Group"
-              description="Currency changes only update the label."
+              title={t("action.editGroup")}
+              description={t("group.settingsDescription")}
               onClose={() => setIsEditing(false)}
             >
               <GroupForm
@@ -269,7 +273,7 @@ export function GroupDetail({
                   name: group.name,
                   currency: group.currency,
                 }}
-                submitLabel="Save Group"
+                submitLabel={t("action.saveGroup")}
                 loading={isSaving}
                 onSubmit={handleUpdateGroup}
               />
@@ -277,8 +281,8 @@ export function GroupDetail({
 
             <Dialog
               open={isMembersOpen}
-              title="Members"
-              description="All current members have the same group permissions."
+              title={t("members.title")}
+              description={t("members.description")}
               onClose={() => setIsMembersOpen(false)}
             >
               <div className="grid gap-3">
@@ -291,7 +295,7 @@ export function GroupDetail({
                       {formatMemberLabel(memberId, user.uid, profiles)}
                     </span>
                     {memberId === group.createdBy ? (
-                      <Badge tone="primary">Created</Badge>
+                      <Badge tone="primary">{t("group.created")}</Badge>
                     ) : null}
                   </div>
                 ))}
@@ -300,8 +304,8 @@ export function GroupDetail({
 
             <Dialog
               open={isInviteOpen}
-              title="Create Invitation"
-              description="Invitations are single-use and expire after 24 hours."
+              title={t("action.createInvitation")}
+              description={t("invitation.description")}
               onClose={() => setIsInviteOpen(false)}
             >
               <InvitationPanel group={group} userId={user.uid} />
@@ -309,22 +313,22 @@ export function GroupDetail({
           </section>
         ) : (
           <Frame surface="surface" dashed className="p-6 text-center">
-            <h2 className="type-h2">Group unavailable</h2>
+            <h2 className="type-h2">{t("group.unavailableTitle")}</h2>
             <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-              This group does not exist or your account is not a member.
+              {t("group.unavailableDescription")}
             </p>
             <Link
               href="/"
               className="type-control mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xs border-[3px] border-border bg-primary px-4 py-2 text-primary-foreground shadow-hard-sm transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-info"
             >
               <Icon name="arrow-left" />
-              Back to Groups
+              {t("action.backToGroups")}
             </Link>
           </Frame>
         )}
 
         {error || profilesError || settlementsError || actionError ? (
-          <Alert title="Group error" tone="danger">
+          <Alert title={t("group.error")} tone="danger">
             {error || profilesError || settlementsError || actionError}
           </Alert>
         ) : null}

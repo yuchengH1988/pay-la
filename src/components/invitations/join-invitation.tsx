@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Alert, Badge, Button, Frame, LoadingCard, ThemeToggle } from "@/src/components/ui";
+import { LanguageSwitcher } from "@/src/components/i18n";
 import { AppHeader } from "@/src/components/layout";
 import { useAuth } from "@/src/hooks/use-auth";
 import { useInvitation } from "@/src/hooks/use-invitation";
+import { useI18n } from "@/src/i18n";
 import {
   acceptInvitation,
   isInvitationExpired,
@@ -22,6 +24,7 @@ function getErrorMessage(error: unknown) {
 }
 
 export function JoinInvitation() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const invitationId = searchParams.get("invitationId");
@@ -70,9 +73,9 @@ export function JoinInvitation() {
   if (!invitationId) {
     content = (
       <Frame surface="surface" dashed className="p-6 text-center">
-        <h1 className="type-h2">Invitation missing</h1>
+        <h1 className="type-h2">{t("invitation.missingTitle")}</h1>
         <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-          Open the complete invitation link from a group member.
+          {t("invitation.missingDescription")}
         </p>
       </Frame>
     );
@@ -81,10 +84,10 @@ export function JoinInvitation() {
   } else if (!user) {
     content = (
       <Frame className="p-5">
-        <Badge tone="accent">Authentication required</Badge>
-        <h1 className="type-h2 mt-4">Join Pay La group</h1>
+        <Badge tone="accent">{t("invitation.authRequired")}</Badge>
+        <h1 className="type-h2 mt-4">{t("invitation.joinTitle")}</h1>
         <p className="type-small mt-2 text-muted">
-          Continue with Google to keep this invitation and join the group.
+          {t("invitation.joinDescription")}
         </p>
         <Button
           type="button"
@@ -93,7 +96,7 @@ export function JoinInvitation() {
           onClick={handleSignIn}
           className="mt-5 w-full"
         >
-          Continue with Google
+          {t("action.continueWithGoogle")}
         </Button>
       </Frame>
     );
@@ -102,46 +105,46 @@ export function JoinInvitation() {
   } else if (!invitation) {
     content = (
       <Frame surface="surface" dashed className="p-6 text-center">
-        <h1 className="type-h2">Invitation not found</h1>
+        <h1 className="type-h2">{t("invitation.notFoundTitle")}</h1>
         <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-          Ask a group member for a fresh invitation link.
+          {t("invitation.notFoundDescription")}
         </p>
       </Frame>
     );
   } else if (invitation.status === "used") {
     content = (
       <Frame surface="surface" dashed className="p-6 text-center">
-        <h1 className="type-h2">Already used</h1>
+        <h1 className="type-h2">{t("invitation.alreadyUsedTitle")}</h1>
         <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-          This invitation was single-use. Ask for a new link.
+          {t("invitation.alreadyUsedDescription")}
         </p>
       </Frame>
     );
   } else if (invitation.status === "revoked") {
     content = (
       <Frame surface="surface" dashed className="p-6 text-center">
-        <h1 className="type-h2">Revoked</h1>
+        <h1 className="type-h2">{t("invitation.revokedTitle")}</h1>
         <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-          This invitation is no longer active.
+          {t("invitation.revokedDescription")}
         </p>
       </Frame>
     );
   } else if (isInvitationExpired(invitation)) {
     content = (
       <Frame surface="surface" dashed className="p-6 text-center">
-        <h1 className="type-h2">Expired</h1>
+        <h1 className="type-h2">{t("invitation.expiredTitle")}</h1>
         <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-          Invitations expire 24 hours after they are created.
+          {t("invitation.expiredDescription")}
         </p>
       </Frame>
     );
   } else {
     content = (
       <Frame className="p-5">
-        <Badge tone="accent">Active invitation</Badge>
-        <h1 className="type-h2 mt-4">Join group</h1>
+        <Badge tone="accent">{t("invitation.active")}</Badge>
+        <h1 className="type-h2 mt-4">{t("action.joinGroup")}</h1>
         <p className="type-small mt-2 text-muted">
-          This link can be used once before it expires.
+          {t("invitation.activeDescription")}
         </p>
         <Button
           type="button"
@@ -150,7 +153,7 @@ export function JoinInvitation() {
           onClick={handleAcceptInvitation}
           className="mt-5 w-full"
         >
-          Join Group
+          {t("action.joinGroup")}
         </Button>
       </Frame>
     );
@@ -167,18 +170,23 @@ export function JoinInvitation() {
             </Link>
           }
           title=""
-          actions={<ThemeToggle />}
+          actions={
+            <>
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </>
+          }
         />
         {content}
         {result ? (
-          <Alert title="Invitation accepted" tone="success">
+          <Alert title={t("invitation.accepted")} tone="success">
             {result === "already-member"
-              ? "You were already a member of this group."
-              : "You joined the group."}
+              ? t("invitation.alreadyMember")
+              : t("invitation.joined")}
           </Alert>
         ) : null}
         {authError || invitationError || actionError ? (
-          <Alert title="Invitation error" tone="danger">
+          <Alert title={t("invitation.error")} tone="danger">
             {authError || invitationError || actionError}
           </Alert>
         ) : null}

@@ -3,8 +3,10 @@
 import type { User } from "firebase/auth";
 import { useState } from "react";
 import { Avatar, Button, Icon, ThemeToggle } from "@/src/components/ui";
+import { LanguageSwitcher } from "@/src/components/i18n";
 import { ProfileSettings } from "@/src/components/profile/profile-settings";
 import { useUserProfiles } from "@/src/hooks/use-user-profiles";
+import { useI18n } from "@/src/i18n";
 import { signOut } from "@/src/services/auth";
 
 function getErrorMessage(error: unknown) {
@@ -24,6 +26,7 @@ export function SignedInHeaderActions({
   showSignedInLabel?: boolean;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useI18n();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { profiles } = useUserProfiles([user.uid]);
   const profile = profiles[user.uid];
@@ -32,7 +35,7 @@ export function SignedInHeaderActions({
     profile?.displayName ||
     user.displayName ||
     user.email ||
-    "Pay La user";
+    t("profile.defaultName");
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -52,7 +55,7 @@ export function SignedInHeaderActions({
         {user.photoURL ? (
           <div
             role="img"
-            aria-label={`${displayName} profile image`}
+            aria-label={t("profile.imageAlt", { name: displayName })}
             className="size-11 rounded-xs border-[3px] border-border bg-muted-surface shadow-hard-sm"
             style={{
               backgroundImage: `url(${user.photoURL})`,
@@ -65,11 +68,12 @@ export function SignedInHeaderActions({
         )}
         <div className="min-w-0">
           {showSignedInLabel ? (
-            <p className="type-caption text-muted">Signed in</p>
+            <p className="type-caption text-muted">{t("profile.signedIn")}</p>
           ) : null}
           <p className="type-small truncate">{displayName}</p>
         </div>
       </div>
+      <LanguageSwitcher />
       <ThemeToggle />
       <ProfileSettings user={user} onError={onError} />
       <Button
@@ -79,7 +83,7 @@ export function SignedInHeaderActions({
         onClick={handleSignOut}
       >
         <Icon name="arrow-left" />
-        Sign Out
+        {t("action.signOut")}
       </Button>
     </>
   );

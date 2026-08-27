@@ -16,6 +16,7 @@ import { PayLaLogo3D } from "@/src/components/brand";
 import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
 import { ProfileNameReminder } from "@/src/components/profile/profile-name-reminder";
 import { useGroups } from "@/src/hooks/use-groups";
+import { useI18n } from "@/src/i18n";
 import { createGroup } from "@/src/services/groups";
 import { GroupBalancePreview } from "./group-balance-preview";
 import { GroupForm } from "./group-form";
@@ -29,6 +30,7 @@ function getErrorMessage(error: unknown) {
 }
 
 export function GroupsOverview({ user }: { user: User }) {
+  const { t } = useI18n();
   const router = useRouter();
   const { groups, loading, error } = useGroups(user.uid);
   const [isCreating, setIsCreating] = useState(false);
@@ -56,7 +58,7 @@ export function GroupsOverview({ user }: { user: User }) {
         <AppHeader
           leading={<PayLaLogo3D />}
           eyebrow="Pay La"
-          title="Groups"
+          title={t("groups.title")}
           actions={() => (
             <SignedInHeaderActions
               user={user}
@@ -72,9 +74,9 @@ export function GroupsOverview({ user }: { user: User }) {
           <div className="grid gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <Badge tone="accent">Member groups</Badge>
+                <Badge tone="accent">{t("group.listBadge")}</Badge>
                 <p className="type-small mt-3 max-w-xl text-muted">
-                  Open a group to add expenses, review balances, and settle up.
+                  {t("group.listDescription")}
                 </p>
               </div>
               <Button
@@ -83,7 +85,7 @@ export function GroupsOverview({ user }: { user: User }) {
                 onClick={() => setShowCreateForm(true)}
               >
                 <Icon name="plus" />
-                Create Group
+                {t("action.createGroup")}
               </Button>
             </div>
 
@@ -110,7 +112,9 @@ export function GroupsOverview({ user }: { user: User }) {
                           <h2 className="type-h3 truncate">{group.name}</h2>
                           <p className="type-caption mt-2 flex items-center gap-2 text-muted">
                             <Icon name="user" className="size-4" />
-                            {group.memberIds.length} members
+                            {t("members.memberCount", {
+                              count: group.memberIds.length,
+                            })}
                           </p>
                         </div>
                         <Badge tone="muted">{group.currency}</Badge>
@@ -125,10 +129,9 @@ export function GroupsOverview({ user }: { user: User }) {
             ) : (
               <Frame surface="surface" dashed className="p-6 text-center">
                 <div className="poster-grid mx-auto mb-4 size-16 border-[3px] border-border bg-primary" />
-                <h2 className="type-h2">No groups yet</h2>
+                <h2 className="type-h2">{t("group.emptyTitle")}</h2>
                 <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-                  Start with one group for a trip, household, dinner, or shared
-                  activity.
+                  {t("group.emptyDescription")}
                 </p>
                 <Button
                   type="button"
@@ -136,7 +139,7 @@ export function GroupsOverview({ user }: { user: User }) {
                   onClick={() => setShowCreateForm(true)}
                 >
                   <Icon name="plus" />
-                  Create Group
+                  {t("action.createGroup")}
                 </Button>
               </Frame>
             )}
@@ -151,24 +154,24 @@ export function GroupsOverview({ user }: { user: User }) {
           onClick={() => setShowCreateForm(true)}
         >
           <Icon name="plus" />
-          Create Group
+          {t("action.createGroup")}
         </Button>
 
         <Dialog
           open={showCreateForm}
-          title="Create Group"
-          description="The creator is recorded, but all members have the same group permissions."
+          title={t("action.createGroup")}
+          description={t("group.createDescription")}
           onClose={() => setShowCreateForm(false)}
         >
           <GroupForm
-            submitLabel="Create Group"
+            submitLabel={t("action.createGroup")}
             loading={isCreating}
             onSubmit={handleCreateGroup}
           />
         </Dialog>
 
         {error || actionError ? (
-          <Alert title="Groups error" tone="danger">
+          <Alert title={t("group.groupsError")} tone="danger">
             {error || actionError}
           </Alert>
         ) : null}

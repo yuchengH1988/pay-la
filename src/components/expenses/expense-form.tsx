@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import {
-  expenseCategories,
-  expenseCategoryLabels,
-} from "@/src/constants/expense-categories";
+import { expenseCategories } from "@/src/constants/expense-categories";
 import { Button, FieldLabel, SelectField, TextInput } from "@/src/components/ui";
+import { useI18n, type TranslationKey } from "@/src/i18n";
 import { calculateSplit, type SplitErrorCode } from "@/src/lib/split-engine";
 import {
   formatDateForInput,
@@ -26,37 +24,35 @@ type SplitSummary =
   | { type: "exact"; assignedMinor: number; remainingMinor: number | null }
   | { type: "percentage"; assignedBasisPoints: number; remainingBasisPoints: number };
 
-const splitTypes: Array<{ value: SplitType; label: string }> = [
-  { value: "equal", label: "Equal" },
-  { value: "exact", label: "Exact amount" },
-  { value: "percentage", label: "Percentage" },
-];
+const splitTypes: SplitType[] = ["equal", "exact", "percentage"];
 
-const formTabs: Array<{ value: ExpenseFormTab; label: string }> = [
-  { value: "basic", label: "Basic" },
-  { value: "split", label: "Split" },
-  { value: "details", label: "Details" },
-];
+const formTabs: ExpenseFormTab[] = ["basic", "split", "details"];
 
-const splitErrorMessages: Record<SplitErrorCode, string> = {
-  invalid_amount: "Amount must be greater than 0 with up to 2 decimals.",
-  no_participants: "Choose at least one participant.",
-  duplicate_participant: "Each participant can only appear once.",
-  invalid_exact_amount: "Exact amounts must be zero or greater.",
-  exact_total_mismatch: "Exact amounts must add up to the expense amount.",
-  invalid_percentage: "Percentages must be between 0 and 100.",
-  percentage_total_mismatch: "Percentages must add up to 100%.",
+const splitErrorMessageKeys: Record<SplitErrorCode, TranslationKey> = {
+  invalid_amount: "validation.amountPositive",
+  no_participants: "validation.participantsRequired",
+  duplicate_participant: "validation.duplicateParticipant",
+  invalid_exact_amount: "validation.exactAmountInvalid",
+  exact_total_mismatch: "validation.exactTotalMismatch",
+  invalid_percentage: "validation.percentageInvalid",
+  percentage_total_mismatch: "validation.percentageTotalMismatch",
 };
 
-function formatMinorAmount(amountMinor: number) {
-  return (amountMinor / 100).toLocaleString(undefined, {
+function formatMinorAmount(
+  amountMinor: number,
+  formatNumber: ReturnType<typeof useI18n>["formatNumber"],
+) {
+  return formatNumber(amountMinor / 100, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
-function formatBasisPoints(basisPoints: number) {
-  return `${(basisPoints / 100).toLocaleString(undefined, {
+function formatBasisPoints(
+  basisPoints: number,
+  formatNumber: ReturnType<typeof useI18n>["formatNumber"],
+) {
+  return `${formatNumber(basisPoints / 100, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}%`;
@@ -91,41 +87,45 @@ function expenseToFormValues(expense: Expense): ExpenseFormValues {
   };
 }
 
-function validateExpenseForm(values: ExpenseFormValues, group: Group) {
+function validateExpenseForm(
+  values: ExpenseFormValues,
+  group: Group,
+  t: (key: TranslationKey) => string,
+) {
   const errors: ExpenseFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Expense name is required.";
+    errors.name = t("validation.expenseNameRequired");
   } else if (values.name.trim().length > 100) {
-    errors.name = "Keep the expense name under 100 characters.";
+    errors.name = t("validation.expenseNameLength");
   }
 
   if (!parseAmountToMinor(values.amount)) {
-    errors.amount = "Amount must be greater than 0 with up to 2 decimals.";
+    errors.amount = t("validation.amountPositive");
   }
 
   if (!expenseCategories.includes(values.category)) {
-    errors.category = "Choose a category.";
+    errors.category = t("validation.categoryRequired");
   }
 
   if (!group.memberIds.includes(values.paidBy)) {
-    errors.paidBy = "Payer must be a group member.";
+    errors.paidBy = t("validation.payerMember");
   }
 
   if (values.participantIds.length < 1) {
-    errors.participantIds = "Choose at least one participant.";
+    errors.participantIds = t("validation.participantsRequired");
   } else if (
     values.participantIds.some((participantId) => !group.memberIds.includes(participantId))
   ) {
-    errors.participantIds = "Participants must be group members.";
+    errors.participantIds = t("validation.participantsMembers");
   }
 
   if (!values.date) {
-    errors.date = "Date is required.";
+    errors.date = t("validation.dateRequired");
   }
 
   if (values.note.length > 500) {
-    errors.note = "Keep the note under 500 characters.";
+    errors.note = t("validation.noteLength");
   }
 
   const amountMinor = parseAmountToMinor(values.amount);
@@ -158,8 +158,8 @@ function validateExpenseForm(values: ExpenseFormValues, group: Group) {
     });
 
     if (!splitResult.ok) {
-      const splitMessage = splitResult.errors.map(
-        (errorCode) => splitErrorMessages[errorCode],
+      const splitMessage = splitResult.errors.map((errorCode) =>
+        t(splitErrorMessageKeys[errorCode]),
       )[0];
 
       if (
@@ -271,6 +271,7 @@ export function ExpenseForm({
   onSubmit: (values: ExpenseFormValues) => Promise<void>;
   onCancel?: () => void;
 }) {
+  const { t, categoryLabel, splitTypeLabel, formatNumber } = useI18n();
   const [values, setValues] = useState<ExpenseFormValues>(
     initialExpense
       ? expenseToFormValues(initialExpense)
@@ -324,7 +325,7 @@ export function ExpenseForm({
       name: values.name.trim(),
       note: values.note.trim(),
     };
-    const nextErrors = validateExpenseForm(nextValues, group);
+    const nextErrors = validateExpenseForm(nextValues, group, t);
 
     setErrors(nextErrors);
 
@@ -347,13 +348,13 @@ export function ExpenseForm({
         <div className="flex w-max gap-2 p-1">
           {formTabs.map((tab) => (
             <Button
-              key={tab.value}
+              key={tab}
               type="button"
               size="sm"
-              variant={activeTab === tab.value ? "primary" : "ghost"}
-              onClick={() => setActiveTab(tab.value)}
+              variant={activeTab === tab ? "primary" : "ghost"}
+              onClick={() => setActiveTab(tab)}
             >
-              {tab.label}
+              {t(`expense.tab${tab[0].toUpperCase()}${tab.slice(1)}` as TranslationKey)}
             </Button>
           ))}
         </div>
@@ -362,21 +363,21 @@ export function ExpenseForm({
       {activeTab === "basic" ? (
         <div className="grid gap-4">
           <TextInput
-            label="Expense name"
+            label={t("expense.name")}
             value={values.name}
             error={errors.name}
             maxLength={100}
-            placeholder="Dinner"
+            placeholder={t("expense.placeholderName")}
             onChange={(event) =>
               setValues((current) => ({ ...current, name: event.target.value }))
             }
           />
           <TextInput
-            label="Amount"
+            label={t("expense.amount")}
             value={values.amount}
             error={errors.amount}
             inputMode="decimal"
-            placeholder="1200.00"
+            placeholder={t("expense.placeholderAmount")}
             onChange={(event) => {
               clearSplitError();
               setValues((current) => ({ ...current, amount: event.target.value }));
@@ -384,7 +385,7 @@ export function ExpenseForm({
           />
           <div className="border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
             <SelectField
-              label="Paid by"
+              label={t("expense.paidBy")}
               value={values.paidBy}
               onChange={(event) =>
                 setValues((current) => ({ ...current, paidBy: event.target.value }))
@@ -406,7 +407,7 @@ export function ExpenseForm({
       {activeTab === "split" ? (
         <div className="grid gap-4">
           <SelectField
-            label="Split method"
+            label={t("expense.splitMethod")}
             value={values.splitType}
             onChange={(event) => {
               clearSplitError();
@@ -417,8 +418,8 @@ export function ExpenseForm({
             }}
           >
             {splitTypes.map((splitType) => (
-              <option key={splitType.value} value={splitType.value}>
-                {splitType.label}
+              <option key={splitType} value={splitType}>
+                {splitTypeLabel(splitType)}
               </option>
             ))}
           </SelectField>
@@ -427,7 +428,7 @@ export function ExpenseForm({
           ) : null}
 
           <div className="grid gap-2">
-            <FieldLabel>Participants</FieldLabel>
+            <FieldLabel>{t("expense.participants")}</FieldLabel>
             <div className="grid gap-2">
               {group.memberIds.map((memberId) => (
                 <label
@@ -451,7 +452,7 @@ export function ExpenseForm({
 
           {values.splitType === "exact" ? (
             <div className="grid gap-2">
-              <FieldLabel>Exact amounts</FieldLabel>
+              <FieldLabel>{t("expense.exactAmounts")}</FieldLabel>
               <div className="grid gap-2">
                 {values.participantIds.map((memberId) => (
                   <label
@@ -464,7 +465,7 @@ export function ExpenseForm({
                     <input
                       value={values.exactAmounts[memberId] ?? ""}
                       inputMode="decimal"
-                      placeholder="0.00"
+                      placeholder={t("expense.placeholderExact")}
                       className="min-h-9 w-full rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
                       onChange={(event) => {
                         clearSplitError();
@@ -483,13 +484,17 @@ export function ExpenseForm({
               {splitSummary.type === "exact" ? (
                 <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
                   <p className="type-small">
-                    Assigned: {group.currency} {formatMinorAmount(splitSummary.assignedMinor)}
+                    {t("expense.assigned")}: {group.currency}{" "}
+                    {formatMinorAmount(splitSummary.assignedMinor, formatNumber)}
                   </p>
                   <p className="type-small">
-                    Remaining:{" "}
+                    {t("expense.remaining")}:{" "}
                     {splitSummary.remainingMinor === null
                       ? "-"
-                      : `${group.currency} ${formatMinorAmount(splitSummary.remainingMinor)}`}
+                      : `${group.currency} ${formatMinorAmount(
+                          splitSummary.remainingMinor,
+                          formatNumber,
+                        )}`}
                   </p>
                 </div>
               ) : null}
@@ -498,7 +503,7 @@ export function ExpenseForm({
 
           {values.splitType === "percentage" ? (
             <div className="grid gap-2">
-              <FieldLabel>Percentages</FieldLabel>
+              <FieldLabel>{t("expense.percentages")}</FieldLabel>
               <div className="grid gap-2">
                 {values.participantIds.map((memberId) => (
                   <label
@@ -512,7 +517,7 @@ export function ExpenseForm({
                       <input
                         value={values.percentages[memberId] ?? ""}
                         inputMode="decimal"
-                        placeholder="50"
+                        placeholder={t("expense.placeholderPercentage")}
                         className="min-h-9 w-full rounded-xs border-[3px] border-border bg-background px-2 text-right font-mono text-sm text-foreground outline-none placeholder:text-muted focus:ring-[3px] focus:ring-info"
                         onChange={(event) => {
                           clearSplitError();
@@ -533,10 +538,12 @@ export function ExpenseForm({
               {splitSummary.type === "percentage" ? (
                 <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
                   <p className="type-small">
-                    Assigned: {formatBasisPoints(splitSummary.assignedBasisPoints)}
+                    {t("expense.assigned")}:{" "}
+                    {formatBasisPoints(splitSummary.assignedBasisPoints, formatNumber)}
                   </p>
                   <p className="type-small">
-                    Remaining: {formatBasisPoints(splitSummary.remainingBasisPoints)}
+                    {t("expense.remaining")}:{" "}
+                    {formatBasisPoints(splitSummary.remainingBasisPoints, formatNumber)}
                   </p>
                 </div>
               ) : null}
@@ -545,14 +552,15 @@ export function ExpenseForm({
 
           {splitSummary.type === "equal" && splitSummary.shares.length > 0 ? (
             <div className="grid gap-2 border-[3px] border-border bg-muted-surface p-3 shadow-hard-sm">
-              <FieldLabel>Equal shares</FieldLabel>
+              <FieldLabel>{t("expense.equalShares")}</FieldLabel>
               {splitSummary.shares.map((share) => (
                 <p key={share.userId} className="type-small flex justify-between gap-3">
                   <span className="min-w-0 truncate">
                     {formatMemberLabel(share.userId, currentUserId, memberProfiles)}
                   </span>
                   <span>
-                    {group.currency} {formatMinorAmount(share.resolvedAmountMinor)}
+                    {group.currency}{" "}
+                    {formatMinorAmount(share.resolvedAmountMinor, formatNumber)}
                   </span>
                 </p>
               ))}
@@ -564,7 +572,7 @@ export function ExpenseForm({
       {activeTab === "details" ? (
         <div className="grid gap-4">
           <SelectField
-            label="Category"
+            label={t("expense.category")}
             value={values.category}
             onChange={(event) =>
               setValues((current) => ({
@@ -575,14 +583,14 @@ export function ExpenseForm({
           >
             {expenseCategories.map((category) => (
               <option key={category} value={category}>
-                {expenseCategoryLabels[category]}
+                {categoryLabel(category)}
               </option>
             ))}
           </SelectField>
           {errors.category ? <p className="type-small text-danger">{errors.category}</p> : null}
 
           <TextInput
-            label="Date"
+            label={t("expense.date")}
             type="date"
             value={values.date}
             error={errors.date}
@@ -592,13 +600,13 @@ export function ExpenseForm({
           />
 
           <label className="grid gap-2">
-            <FieldLabel>Note</FieldLabel>
+            <FieldLabel>{t("expense.note")}</FieldLabel>
             <textarea
               value={values.note}
               maxLength={500}
               rows={3}
               className="rounded-xs border-[3px] border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground shadow-hard-sm outline-none placeholder:text-muted focus:shadow-hard focus:ring-[3px] focus:ring-info"
-              placeholder="Optional"
+              placeholder={t("expense.optional")}
               onChange={(event) =>
                 setValues((current) => ({ ...current, note: event.target.value }))
               }
@@ -611,7 +619,7 @@ export function ExpenseForm({
       <div className="grid gap-3 sm:grid-cols-2">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
+            {t("action.cancel")}
           </Button>
         ) : null}
         <Button type="submit" loading={loading} className="w-full">

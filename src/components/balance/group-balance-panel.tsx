@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Badge, Frame } from "@/src/components/ui";
+import { useI18n } from "@/src/i18n";
 import { calculateBalances } from "@/src/lib/balance-engine";
 import { formatAmountFromMinor } from "@/src/services/expenses";
 import type { Expense } from "@/src/types/expense";
@@ -23,16 +24,16 @@ function formatSignedAmount(amountMinor: number, currency: string) {
   return `${prefix}${formatAmountFromMinor(Math.abs(amountMinor), currency)}`;
 }
 
-function getBalanceNote(amountMinor: number) {
+function getBalanceNote(amountMinor: number, t: ReturnType<typeof useI18n>["t"]) {
   if (amountMinor > 0) {
-    return "is owed";
+    return t("balance.isOwed");
   }
 
   if (amountMinor < 0) {
-    return "owes";
+    return t("balance.owes");
   }
 
-  return "settled";
+  return t("balance.settled");
 }
 
 export function GroupBalancePanel({
@@ -50,6 +51,7 @@ export function GroupBalancePanel({
   settlements: Settlement[];
   onSettleUp: (values: SettlementFormValues) => void;
 }) {
+  const { t } = useI18n();
   const balance = useMemo(
     () =>
       calculateBalances({
@@ -81,11 +83,11 @@ export function GroupBalancePanel({
     >
       <div className="mb-4 flex items-start justify-between gap-3 md:mb-5">
         <div>
-          <h2 className="type-h3">Balance</h2>
+          <h2 className="type-h3">{t("balance.title")}</h2>
           <p className="type-small mt-2 hidden text-muted md:block">
             {isSettled
-              ? "No one needs to pay anything back right now."
-              : "Settle the open balance when money changes hands."}
+              ? t("balance.currentSettledDescription")
+              : t("balance.currentUnsettledDescription")}
           </p>
         </div>
         <Badge tone="muted">{group.currency}</Badge>
@@ -114,7 +116,7 @@ export function GroupBalancePanel({
                 memberProfiles,
               )}
               balance={formatSignedAmount(memberBalance.netAmountMinor, group.currency)}
-              note={getBalanceNote(memberBalance.netAmountMinor)}
+              note={getBalanceNote(memberBalance.netAmountMinor, t)}
               tone={
                 memberBalance.netAmountMinor > 0
                   ? "positive"
@@ -129,7 +131,7 @@ export function GroupBalancePanel({
 
       {!isSettled && balance.simplifiedDebts.length > 0 ? (
         <div className="mt-5 hidden md:block">
-          <h3 className="type-label">Settlement suggestions</h3>
+          <h3 className="type-label">{t("balance.suggestions")}</h3>
           <div className="mt-3 grid gap-3">
             {balance.simplifiedDebts.map((debt) => (
               <SettlementSuggestion
@@ -137,7 +139,7 @@ export function GroupBalancePanel({
                 from={formatMemberLabel(debt.fromUserId, currentUserId, memberProfiles)}
                 to={formatMemberLabel(debt.toUserId, currentUserId, memberProfiles)}
                 amount={formatAmountFromMinor(debt.amountMinor, group.currency)}
-                actionLabel="Settle"
+                actionLabel={t("action.settle")}
                 onAction={() =>
                   onSettleUp({
                     payerId: debt.fromUserId,

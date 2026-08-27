@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Button, Dialog, Icon } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
+import { useI18n } from "@/src/i18n";
 
 export function AppHeader({
   leading,
@@ -20,6 +21,7 @@ export function AppHeader({
   bordered?: boolean;
   className?: string;
 }) {
+  const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const desktopActions = typeof actions === "function" ? actions() : actions;
   const menuActions = typeof actions === "function" ? actions() : actions;
@@ -52,7 +54,7 @@ export function AppHeader({
               variant="outline"
               className="md:hidden"
               onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label={t("dialog.menu")}
             >
               <Icon name="menu" />
             </Button>
@@ -63,7 +65,7 @@ export function AppHeader({
       {actions ? (
         <Dialog
           open={menuOpen}
-          title="Menu"
+          title={t("dialog.menu")}
           onClose={() => setMenuOpen(false)}
         >
           <div className="grid gap-4">{menuActions}</div>

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, SelectField, TextInput } from "@/src/components/ui";
+import { useI18n, type TranslationKey } from "@/src/i18n";
 import type { GroupFormValues } from "@/src/types/group";
 
 const currencies = ["TWD", "USD", "JPY", "EUR", "GBP"];
@@ -11,17 +12,20 @@ type GroupFormErrors = {
   currency?: string;
 };
 
-function validateGroupForm(values: GroupFormValues) {
+function validateGroupForm(
+  values: GroupFormValues,
+  t: (key: TranslationKey) => string,
+) {
   const errors: GroupFormErrors = {};
 
   if (!values.name.trim()) {
-    errors.name = "Group name is required.";
+    errors.name = t("validation.groupNameRequired");
   } else if (values.name.trim().length > 80) {
-    errors.name = "Keep the group name under 80 characters.";
+    errors.name = t("validation.groupNameLength");
   }
 
   if (!currencies.includes(values.currency)) {
-    errors.currency = "Choose a supported currency.";
+    errors.currency = t("validation.groupCurrencyRequired");
   }
 
   return errors;
@@ -38,6 +42,7 @@ export function GroupForm({
   loading?: boolean;
   onSubmit: (values: GroupFormValues) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [values, setValues] = useState<GroupFormValues>(initialValues);
   const [errors, setErrors] = useState<GroupFormErrors>({});
 
@@ -48,7 +53,7 @@ export function GroupForm({
       name: values.name.trim(),
       currency: values.currency,
     };
-    const nextErrors = validateGroupForm(nextValues);
+    const nextErrors = validateGroupForm(nextValues, t);
 
     setErrors(nextErrors);
 
@@ -62,7 +67,7 @@ export function GroupForm({
   return (
     <form className="grid gap-4" onSubmit={handleSubmit}>
       <TextInput
-        label="Group name"
+        label={t("group.name")}
         value={values.name}
         error={errors.name}
         maxLength={80}
@@ -72,7 +77,7 @@ export function GroupForm({
         }
       />
       <SelectField
-        label="Currency"
+        label={t("group.currency")}
         value={values.currency}
         onChange={(event) =>
           setValues((current) => ({ ...current, currency: event.target.value }))

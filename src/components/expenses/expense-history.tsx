@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { expenseCategoryLabels } from "@/src/constants/expense-categories";
 import {
   Alert,
   Badge,
@@ -13,10 +12,10 @@ import {
 } from "@/src/components/ui";
 import { cx } from "@/src/components/ui/cx";
 import { SettlementForm } from "@/src/components/settlements";
+import { useI18n } from "@/src/i18n";
 import {
   deleteExpense,
   formatAmountFromMinor,
-  formatExpenseDate,
   updateExpense,
 } from "@/src/services/expenses";
 import {
@@ -48,15 +47,6 @@ function settlementToFormValues(settlement: Settlement): SettlementFormValues {
   };
 }
 
-function formatHistoryDate(date: Expense["date"]) {
-  const value = date.toDate();
-
-  return {
-    month: value.toLocaleDateString("en-US", { month: "short" }),
-    day: value.toLocaleDateString("en-US", { day: "numeric" }),
-  };
-}
-
 type GroupHistoryItem =
   | { type: "expense"; sortTime: number; expense: Expense }
   | { type: "settlement"; sortTime: number; settlement: Settlement };
@@ -82,6 +72,13 @@ export function ExpenseHistory({
   loading: boolean;
   error: string | null;
 }) {
+  const {
+    t,
+    categoryLabel,
+    splitTypeLabel,
+    formatDate,
+    formatDateParts,
+  } = useI18n();
   const [selectedItem, setSelectedItem] = useState<GroupHistoryItem | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
@@ -172,35 +169,38 @@ export function ExpenseHistory({
       participantCount === group.memberIds.length &&
       group.memberIds.every((memberId) => expense.participants[memberId]);
 
-    return includesAllMembers ? null : `${participantCount} participants`;
+    return includesAllMembers
+      ? null
+      : t("members.participantCount", { count: participantCount });
   }
 
   function renderSettlementSummary(settlement: Settlement) {
     return (
       <>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <Badge tone="primary">Settlement</Badge>
+          <Badge tone="primary">{t("settlement.title")}</Badge>
           <span className="type-caption text-muted">
-            {formatExpenseDate(settlement.date)}
+            {formatDate(settlement.date.toDate())}
           </span>
         </div>
         <p className="type-h3 truncate">
-          {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)} paid{" "}
+          {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)}{" "}
+          {t("settlement.paid")}{" "}
           {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
         </p>
-        <p className="type-small mt-1 text-muted">Balance repayment</p>
+        <p className="type-small mt-1 text-muted">{t("settlement.balanceRepayment")}</p>
       </>
     );
   }
 
   function renderSettlementRow(settlement: Settlement) {
-    const date = formatHistoryDate(settlement.date);
+    const date = formatDateParts(settlement.date.toDate());
     const rowMeta =
       settlement.payerId === currentUserId
-        ? { label: "You paid", amount: settlement.amountMinor, tone: "negative" }
+        ? { label: t("settlement.youPaid"), amount: settlement.amountMinor, tone: "negative" }
         : settlement.receiverId === currentUserId
-          ? { label: "You received", amount: settlement.amountMinor, tone: "positive" }
-          : { label: "Recorded", amount: settlement.amountMinor, tone: "neutral" };
+          ? { label: t("settlement.youReceived"), amount: settlement.amountMinor, tone: "positive" }
+          : { label: t("settlement.recorded"), amount: settlement.amountMinor, tone: "neutral" };
 
     return (
       <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
@@ -213,14 +213,17 @@ export function ExpenseHistory({
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <Badge tone="primary">
                 <Icon name="wallet" className="size-3" />
-                Settlement
+                {t("settlement.title")}
               </Badge>
             </div>
             <p className="type-label truncate">
-              {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)} paid{" "}
+              {formatMemberLabel(settlement.payerId, currentUserId, memberProfiles)}{" "}
+              {t("settlement.paid")}{" "}
               {formatMemberLabel(settlement.receiverId, currentUserId, memberProfiles)}
             </p>
-            <p className="type-caption mt-1 truncate text-muted">Balance repayment</p>
+            <p className="type-caption mt-1 truncate text-muted">
+              {t("settlement.balanceRepayment")}
+            </p>
           </div>
           <div className="min-w-0 text-right">
             <p className="font-amount whitespace-nowrap text-base font-black leading-none sm:text-xl">
@@ -248,15 +251,16 @@ export function ExpenseHistory({
     return (
       <>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <Badge tone="accent">{expenseCategoryLabels[expense.category]}</Badge>
+          <Badge tone="accent">{categoryLabel(expense.category)}</Badge>
           <span className="type-caption text-muted">
-            {formatExpenseDate(expense.date)}
+            {formatDate(expense.date.toDate())}
           </span>
-          <Badge tone="muted">{expense.splitType}</Badge>
+          <Badge tone="muted">{splitTypeLabel(expense.splitType)}</Badge>
         </div>
         <p className="type-h3 truncate">{expense.name}</p>
         <p className="type-small mt-1 text-muted">
-          Paid by {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
+          {t("expense.paidBy")}{" "}
+          {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
         </p>
         {participantText ? (
           <p className="type-small mt-1 text-muted">{participantText}</p>
@@ -266,7 +270,7 @@ export function ExpenseHistory({
   }
 
   function renderExpenseRow(expense: Expense) {
-    const date = formatHistoryDate(expense.date);
+    const date = formatDateParts(expense.date.toDate());
     const participantText = getParticipantText(expense);
     const currentUserShare =
       expense.participants[currentUserId]?.resolvedAmountMinor ?? 0;
@@ -274,12 +278,12 @@ export function ExpenseHistory({
     const currentUserNet = currentUserPaid - currentUserShare;
     const rowMeta =
       currentUserNet > 0
-        ? { label: "You covered", amount: currentUserNet, tone: "positive" }
+        ? { label: t("expense.youCovered"), amount: currentUserNet, tone: "positive" }
         : currentUserNet < 0
-          ? { label: "Your share", amount: Math.abs(currentUserNet), tone: "negative" }
+          ? { label: t("expense.yourShare"), amount: Math.abs(currentUserNet), tone: "negative" }
           : currentUserShare > 0
-            ? { label: "Settled share", amount: currentUserShare, tone: "neutral" }
-            : { label: "Total", amount: expense.amountMinor, tone: "neutral" };
+            ? { label: t("expense.settledShare"), amount: currentUserShare, tone: "neutral" }
+            : { label: t("expense.amount"), amount: expense.amountMinor, tone: "neutral" };
 
     return (
       <article className="border-b-[3px] border-border bg-surface px-2 py-4 transition-colors hover:bg-muted-surface last:border-b-0 sm:px-3">
@@ -292,12 +296,13 @@ export function ExpenseHistory({
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <Badge tone="accent">
                 <Icon name="receipt" className="size-3" />
-                {expenseCategoryLabels[expense.category]}
+                {categoryLabel(expense.category)}
               </Badge>
             </div>
             <p className="type-label truncate">{expense.name}</p>
             <p className="type-caption mt-1 truncate text-muted">
-              Paid by {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
+              {t("expense.paidBy")}{" "}
+              {formatMemberLabel(expense.paidBy, currentUserId, memberProfiles)}
               {participantText ? ` / ${participantText}` : ""}
             </p>
           </div>
@@ -330,7 +335,7 @@ export function ExpenseHistory({
       <div className="mt-5 flex flex-wrap gap-3">
         <Button type="button" onClick={onEdit}>
           <Icon name="edit" />
-          Edit
+          {t("action.edit")}
         </Button>
         {isConfirming ? (
           <>
@@ -339,7 +344,7 @@ export function ExpenseHistory({
               variant="ghost"
               onClick={() => setConfirmingDelete(null)}
             >
-              Cancel
+              {t("action.cancel")}
             </Button>
             <Button
               type="button"
@@ -348,7 +353,7 @@ export function ExpenseHistory({
               onClick={() => handleDelete(target)}
             >
               <Icon name="trash" />
-              Confirm Delete
+              {t("action.confirmDelete")}
             </Button>
           </>
         ) : (
@@ -358,7 +363,7 @@ export function ExpenseHistory({
             onClick={() => setConfirmingDelete(target)}
           >
             <Icon name="trash" />
-            Delete
+            {t("action.delete")}
           </Button>
         )}
       </div>
@@ -369,12 +374,14 @@ export function ExpenseHistory({
     <Frame as="section" className="min-w-0 p-4 sm:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="type-h2">Group history</h2>
+          <h2 className="type-h2">{t("expense.historyTitle")}</h2>
           <p className="type-small mt-2 max-w-xl text-muted">
-            A running record of expenses and repayments.
+            {t("expense.historyDescription")}
           </p>
         </div>
-        <Badge tone="muted">{historyItems.length} records</Badge>
+        <Badge tone="muted">
+          {t("history.recordCount", { count: historyItems.length })}
+        </Badge>
       </div>
 
       {loading ? (
@@ -414,16 +421,16 @@ export function ExpenseHistory({
       ) : (
         <Frame surface="surface" dashed className="p-6 text-center">
           <div className="poster-grid mx-auto mb-4 size-16 border-[3px] border-border bg-primary" />
-          <h3 className="type-h2">No expenses yet</h3>
+          <h3 className="type-h2">{t("expense.emptyTitle")}</h3>
           <p className="type-small mx-auto mt-2 max-w-sm text-muted">
-            Add the first shared cost when the group starts spending.
+            {t("expense.emptyDescription")}
           </p>
         </Frame>
       )}
 
       {error || actionError ? (
         <div className="mt-4">
-          <Alert title="History error" tone="danger">
+          <Alert title={t("expense.historyError")} tone="danger">
             {error || actionError}
           </Alert>
         </div>
@@ -431,7 +438,7 @@ export function ExpenseHistory({
 
       <Dialog
         open={selectedItem !== null}
-        title={selectedItem?.type === "settlement" ? "Settlement" : "Expense"}
+        title={selectedItem?.type === "settlement" ? t("settlement.title") : t("expense.details")}
         onClose={closeDetailDialog}
       >
         {selectedItem?.type === "expense" ? (
@@ -443,13 +450,13 @@ export function ExpenseHistory({
               ) : null}
             </div>
             <Frame surface="surface" shadow="sm" className="grid gap-2 p-3">
-              <p className="type-label">Amount</p>
+              <p className="type-label">{t("expense.amount")}</p>
               <p className="type-amount-md">
                 {formatAmountFromMinor(selectedItem.expense.amountMinor, group.currency)}
               </p>
               {selectedItem.expense.participants[currentUserId] ? (
                 <p className="type-small text-muted">
-                  Your share{" "}
+                  {t("expense.yourShare")}{" "}
                   {formatAmountFromMinor(
                     selectedItem.expense.participants[currentUserId].resolvedAmountMinor,
                     group.currency,
@@ -478,7 +485,7 @@ export function ExpenseHistory({
               ) : null}
             </div>
             <Frame surface="surface" shadow="sm" className="grid gap-2 p-3">
-              <p className="type-label">Amount</p>
+              <p className="type-label">{t("expense.amount")}</p>
               <p className="type-amount-md">
                 {formatAmountFromMinor(selectedItem.settlement.amountMinor, group.currency)}
               </p>
@@ -496,8 +503,8 @@ export function ExpenseHistory({
 
       <Dialog
         open={editingExpense !== null}
-        title="Edit Expense"
-        description="Changes update the stored expense and derived balance."
+        title={t("action.editExpense")}
+        description={t("expense.editDescription")}
         onClose={() => setEditingExpense(null)}
       >
         {editingExpense ? (
@@ -507,7 +514,7 @@ export function ExpenseHistory({
             currentUserId={currentUserId}
             memberProfiles={memberProfiles}
             initialExpense={editingExpense}
-            submitLabel="Save Expense"
+            submitLabel={t("action.saveExpense")}
             loading={savingExpenseId === editingExpense.id}
             onSubmit={handleUpdateExpense}
             onCancel={() => setEditingExpense(null)}
@@ -517,8 +524,8 @@ export function ExpenseHistory({
 
       <Dialog
         open={editingSettlement !== null}
-        title="Edit Settlement"
-        description="Changes update the recorded repayment and derived balance."
+        title={t("action.editSettlement")}
+        description={t("settlement.editDescription")}
         onClose={() => setEditingSettlement(null)}
       >
         {editingSettlement ? (
@@ -528,7 +535,7 @@ export function ExpenseHistory({
             currentUserId={currentUserId}
             memberProfiles={memberProfiles}
             initialValues={settlementToFormValues(editingSettlement)}
-            submitLabel="Save Settlement"
+            submitLabel={t("action.saveSettlement")}
             loading={savingSettlementId === editingSettlement.id}
             onSubmit={handleUpdateSettlement}
             onCancel={() => setEditingSettlement(null)}

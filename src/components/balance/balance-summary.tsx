@@ -1,4 +1,5 @@
 import { Frame } from "@/src/components/ui";
+import { useI18n } from "@/src/i18n";
 
 type BalanceEmphasis = "settled" | "owes" | "owed" | "mixed";
 
@@ -11,11 +12,13 @@ export function BalanceSummary({
   isOwedAmount?: string;
   emphasis?: BalanceEmphasis;
 }) {
+  const { t } = useI18n();
+
   if (emphasis === "settled") {
     return (
       <Frame surface="surface" dashed className="min-w-0 p-4 text-center">
-        <p className="type-label text-muted">Balance</p>
-        <p className="type-amount-md mt-2 break-words">All settled</p>
+        <p className="type-label text-muted">{t("balance.title")}</p>
+        <p className="type-amount-md mt-2 break-words">{t("balance.allSettled")}</p>
       </Frame>
     );
   }
@@ -24,13 +27,13 @@ export function BalanceSummary({
     return (
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <Frame surface="secondary" className="min-w-0 p-4">
-          <p className="type-label">You owe</p>
+          <p className="type-label">{t("balance.youOwe")}</p>
           <p className="type-amount-md mt-2 break-words sm:text-4xl">
             {owesAmount}
           </p>
         </Frame>
         <Frame surface="primary" className="min-w-0 p-4">
-          <p className="type-label">You are owed</p>
+          <p className="type-label">{t("balance.youAreOwed")}</p>
           <p className="type-amount-md mt-2 break-words sm:text-4xl">
             {isOwedAmount}
           </p>
@@ -39,9 +42,9 @@ export function BalanceSummary({
     );
   }
 
-  const primaryLabel = emphasis === "owes" ? "You owe" : "You are owed";
+  const primaryLabel = emphasis === "owes" ? t("balance.youOwe") : t("balance.youAreOwed");
   const primaryAmount = emphasis === "owes" ? owesAmount : isOwedAmount;
-  const secondaryLabel = emphasis === "owes" ? "You are owed" : "You owe";
+  const secondaryLabel = emphasis === "owes" ? t("balance.youAreOwed") : t("balance.youOwe");
   const secondaryAmount = emphasis === "owes" ? isOwedAmount : owesAmount;
 
   return (

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Button } from "./button";
 import { Frame } from "./frame";
 import { Icon } from "./icon";
+import { useI18n } from "@/src/i18n";
 
 export function Dialog({
   open,
@@ -16,6 +17,8 @@ export function Dialog({
   children: ReactNode;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
+
   if (!open) {
     return null;
   }
@@ -48,7 +51,7 @@ export function Dialog({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label={t("dialog.close")}
           >
             <Icon name="close" className="size-4" />
           </Button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { Icon } from "./icon";
+import { useI18n } from "@/src/i18n";
 
 type Theme = "light" | "dark";
 
@@ -52,6 +53,7 @@ function applyTheme(theme: Theme, notify = false) {
 }
 
 export function ThemeToggle() {
+  const { t } = useI18n();
   const theme = useSyncExternalStore(
     subscribeThemeChange,
     getThemeSnapshot,
@@ -75,7 +77,9 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className="type-label inline-flex min-h-11 items-center gap-2 rounded-xs border-[3px] border-border bg-surface-raised px-3 text-foreground shadow-hard-sm transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-info"
       aria-pressed={isDark}
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+      aria-label={t("theme.switchTo", {
+        theme: isDark ? t("theme.light") : t("theme.dark"),
+      })}
       suppressHydrationWarning
     >
       <span
@@ -84,7 +88,7 @@ export function ThemeToggle() {
       >
         <Icon name={isDark ? "sun" : "moon"} className="size-4" />
       </span>
-      {isDark ? "Light" : "Dark"}
+      {isDark ? t("theme.light") : t("theme.dark")}
     </button>
   );
 }
