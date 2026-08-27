@@ -57,6 +57,7 @@ export function GroupDetail({
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [isCreatingExpense, setIsCreatingExpense] = useState(false);
+  const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [settlementDraft, setSettlementDraft] =
@@ -140,46 +141,30 @@ export function GroupDetail({
               className="min-w-0 p-3 md:col-start-2 md:row-start-2 md:p-5"
             >
               <div className="max-w-full overflow-x-auto pb-1 md:overflow-visible md:pb-0">
-                <div className="flex w-max max-w-none gap-3 pr-1 md:grid md:w-full md:max-w-full md:pr-0">
-                <Button
-                  type="button"
-                  className="shrink-0 md:w-full"
-                  onClick={() => setIsAddingExpense(true)}
-                >
-                  Add Expense
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="shrink-0 md:w-full"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Group
-                </Button>
-                <SettlementPanel
-                  group={group}
-                  currentUserId={user.uid}
-                  memberProfiles={profiles}
-                  draft={settlementDraft}
-                  onDraftConsumed={handleSettlementDraftConsumed}
-                  className="shrink-0 md:w-full"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="shrink-0 md:w-full"
-                  onClick={() => setIsMembersOpen(true)}
-                >
-                  Members
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="shrink-0 md:w-full"
-                  onClick={() => setIsInviteOpen(true)}
-                >
-                  Create Invitation
-                </Button>
+                <div className="flex w-max max-w-none gap-2 p-1 md:grid md:w-full md:max-w-full md:pr-0">
+                  <Button
+                    type="button"
+                    className="hidden shrink-0 md:inline-flex md:w-full"
+                    onClick={() => setIsAddingExpense(true)}
+                  >
+                    Add Expense
+                  </Button>
+                  <SettlementPanel
+                    group={group}
+                    currentUserId={user.uid}
+                    memberProfiles={profiles}
+                    draft={settlementDraft}
+                    onDraftConsumed={handleSettlementDraftConsumed}
+                    className="shrink-0 bg-secondary text-secondary-foreground md:w-full"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="shrink-0 md:w-full"
+                    onClick={() => setIsGroupMenuOpen(true)}
+                  >
+                    Group Settings
+                  </Button>
                 </div>
               </div>
             </Frame>
@@ -219,6 +204,45 @@ export function GroupDetail({
                 onSubmit={handleCreateExpense}
                 onCancel={() => setIsAddingExpense(false)}
               />
+            </Dialog>
+
+            <Dialog
+              open={isGroupMenuOpen}
+              title="Group Settings"
+              onClose={() => setIsGroupMenuOpen(false)}
+            >
+              <div className="grid gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setIsGroupMenuOpen(false);
+                    setIsEditing(true);
+                  }}
+                >
+                  Edit Group
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsGroupMenuOpen(false);
+                    setIsMembersOpen(true);
+                  }}
+                >
+                  Members
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsGroupMenuOpen(false);
+                    setIsInviteOpen(true);
+                  }}
+                >
+                  Create Invitation
+                </Button>
+              </div>
             </Dialog>
 
             <Dialog
