@@ -13,6 +13,7 @@ import {
 } from "@/src/components/ui";
 import { PayLaLogo3D } from "@/src/components/brand";
 import { AppHeader, SignedInHeaderActions } from "@/src/components/layout";
+import { ProfileNameReminder } from "@/src/components/profile/profile-name-reminder";
 import { useGroups } from "@/src/hooks/use-groups";
 import { createGroup } from "@/src/services/groups";
 import { GroupBalancePreview } from "./group-balance-preview";
@@ -63,6 +64,8 @@ export function GroupsOverview({ user }: { user: User }) {
             />
           )}
         />
+
+        <ProfileNameReminder user={user} onError={setActionError} />
 
         <section className="grid gap-5">
           <div className="grid gap-4">
