@@ -103,19 +103,8 @@ export function SignedInHeaderActions({
 
   return (
     <>
-      {identity}
       <LanguageSwitcher />
       <ThemeToggle />
-      <ProfileSettings user={user} onError={onError} />
-      <Button
-        type="button"
-        variant="outline"
-        loading={isSigningOut}
-        onClick={handleSignOut}
-      >
-        <Icon name="arrow-left" />
-        {t("action.signOut")}
-      </Button>
     </>
   );
 }

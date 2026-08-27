@@ -13,6 +13,7 @@ export function AppHeader({
   eyebrow,
   title,
   actions,
+  showMenuButtonOnDesktop = false,
   bordered = true,
   className,
 }: {
@@ -20,6 +21,7 @@ export function AppHeader({
   eyebrow?: ReactNode;
   title: ReactNode;
   actions?: ReactNode | ((placement: AppHeaderActionPlacement) => ReactNode);
+  showMenuButtonOnDesktop?: boolean;
   bordered?: boolean;
   className?: string;
 }) {
@@ -47,20 +49,18 @@ export function AppHeader({
           ) : null}
         </div>
         {actions ? (
-          <>
-            <div className="hidden flex-wrap items-center gap-3 md:flex">
-              {desktopActions}
-            </div>
+          <div className="flex flex-wrap items-center gap-3 [&>*:not(:last-child)]:hidden md:[&>*:not(:last-child)]:inline-flex">
+            {desktopActions}
             <Button
               type="button"
               variant="outline"
-              className="md:hidden"
+              className={cx(!showMenuButtonOnDesktop && "md:hidden")}
               onClick={() => setMenuOpen(true)}
               aria-label={t("dialog.menu")}
             >
               <Icon name="menu" />
             </Button>
-          </>
+          </div>
         ) : null}
       </header>
 

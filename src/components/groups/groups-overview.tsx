@@ -59,6 +59,7 @@ export function GroupsOverview({ user }: { user: User }) {
           leading={<PayLaLogo3D />}
           eyebrow={t("brand.name")}
           title={t("groups.title")}
+          showMenuButtonOnDesktop
           actions={(placement) => (
             <SignedInHeaderActions
               user={user}
@@ -80,14 +81,15 @@ export function GroupsOverview({ user }: { user: User }) {
                   {t("group.listDescription")}
                 </p>
               </div>
-              <Button
-                type="button"
-                className="hidden sm:inline-flex"
-                onClick={() => setShowCreateForm(true)}
-              >
-                <Icon name="plus" />
-                {t("action.createGroup")}
-              </Button>
+              <div className="hidden sm:block">
+                <Button
+                  type="button"
+                  onClick={() => setShowCreateForm(true)}
+                >
+                  <Icon name="plus" />
+                  {t("action.createGroup")}
+                </Button>
+              </div>
             </div>
 
             {loading ? (
@@ -108,7 +110,7 @@ export function GroupsOverview({ user }: { user: User }) {
                       as="article"
                       className="grid min-h-full gap-4 p-4 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5"
                     >
-                      <div className="mb-5 flex items-start justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <h2 className="type-h3 truncate">{group.name}</h2>
                           <p className="type-caption mt-2 flex items-center gap-2 text-muted">

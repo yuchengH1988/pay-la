@@ -119,6 +119,7 @@ export function GroupDetail({
           }
           eyebrow={t("group.workspace")}
           title={loading ? t("common.loading") : group?.name || t("group.titleFallback")}
+          showMenuButtonOnDesktop
           actions={(placement) => (
             <SignedInHeaderActions
               user={user}
