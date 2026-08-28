@@ -10,6 +10,7 @@ import {
   ThemeToggle,
 } from "@/src/components/ui";
 import { PayLaLogo3D } from "@/src/components/brand";
+import { DemoWorkspace } from "@/src/components/demo/demo-workspace";
 import { LanguageSwitcher } from "@/src/components/i18n";
 import { AppHeader } from "@/src/components/layout";
 import { GroupsOverview } from "@/src/components/groups/groups-overview";
@@ -30,6 +31,7 @@ export function AuthEntry() {
   const { user, loading, error: authError } = useAuth();
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   async function handleSignIn() {
     setActionLoading(true);
@@ -46,6 +48,10 @@ export function AuthEntry() {
 
   if (user) {
     return <GroupsOverview user={user} />;
+  }
+
+  if (demoMode) {
+    return <DemoWorkspace onExit={() => setDemoMode(false)} />;
   }
 
   return (
@@ -111,8 +117,18 @@ export function AuthEntry() {
                   <Icon name="user" />
                   {t("action.continueWithGoogle")}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setDemoMode(true)}
+                  className="w-full"
+                >
+                  <Icon name="receipt" />
+                  {t("action.tryDemo")}
+                </Button>
                 <p className="type-caption text-muted">
-                  {t("auth.entryCaption")}
+                  {t("auth.demoCaption")}
                 </p>
               </div>
             )}

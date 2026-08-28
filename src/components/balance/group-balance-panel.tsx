@@ -43,6 +43,7 @@ export function GroupBalancePanel({
   expenses,
   settlements,
   onSettleUp,
+  readOnly = false,
 }: {
   group: Group;
   currentUserId: string;
@@ -50,6 +51,7 @@ export function GroupBalancePanel({
   expenses: Expense[];
   settlements: Settlement[];
   onSettleUp: (values: SettlementFormValues) => void;
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   const balance = useMemo(
@@ -139,15 +141,18 @@ export function GroupBalancePanel({
                 from={formatMemberLabel(debt.fromUserId, currentUserId, memberProfiles)}
                 to={formatMemberLabel(debt.toUserId, currentUserId, memberProfiles)}
                 amount={formatAmountFromMinor(debt.amountMinor, group.currency)}
-                actionLabel={t("action.settle")}
-                onAction={() =>
-                  onSettleUp({
-                    payerId: debt.fromUserId,
-                    receiverId: debt.toUserId,
-                    amount: (debt.amountMinor / 100).toFixed(2),
-                    date: new Date().toISOString().slice(0, 10),
-                    note: "",
-                  })
+                actionLabel={readOnly ? undefined : t("action.settle")}
+                onAction={
+                  readOnly
+                    ? undefined
+                    : () =>
+                        onSettleUp({
+                          payerId: debt.fromUserId,
+                          receiverId: debt.toUserId,
+                          amount: (debt.amountMinor / 100).toFixed(2),
+                          date: new Date().toISOString().slice(0, 10),
+                          note: "",
+                        })
                 }
               />
             ))}

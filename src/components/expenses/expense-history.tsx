@@ -100,6 +100,7 @@ export function ExpenseHistory({
   settlements,
   loading,
   error,
+  readOnly = false,
 }: {
   group: Group;
   currentUserId: string;
@@ -108,6 +109,7 @@ export function ExpenseHistory({
   settlements: Settlement[];
   loading: boolean;
   error: string | null;
+  readOnly?: boolean;
 }) {
   const {
     t,
@@ -372,6 +374,10 @@ export function ExpenseHistory({
   }
 
   function renderDetailActions(target: DeleteTarget, onEdit: () => void) {
+    if (readOnly) {
+      return null;
+    }
+
     const isConfirming =
       confirmingDelete?.type === target.type && confirmingDelete.id === target.id;
     const deleteKey = `${target.type}-${target.id}`;
