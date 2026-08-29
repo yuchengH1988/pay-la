@@ -199,10 +199,21 @@ export function GroupDetail({
                 settlements={settlements}
                 loading={expensesLoading}
                 error={expensesError}
+                headerAction={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="md:hidden"
+                    aria-label={t("action.groupSettings")}
+                    onClick={() => setIsGroupMenuOpen(true)}
+                  >
+                    <Icon name="settings" />
+                  </Button>
+                }
               />
             </div>
 
-            <div className="fixed inset-x-4 bottom-5 z-40 grid grid-cols-2 gap-2 md:hidden">
+            <div className="fixed inset-x-2 bottom-4 z-40 grid grid-cols-2 gap-2 md:hidden">
               <SettlementPanel
                 group={group}
                 currentUserId={user.uid}

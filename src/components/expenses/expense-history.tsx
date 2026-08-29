@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Alert,
   Badge,
@@ -101,6 +101,7 @@ export function ExpenseHistory({
   loading,
   error,
   readOnly = false,
+  headerAction,
 }: {
   group: Group;
   currentUserId: string;
@@ -110,6 +111,7 @@ export function ExpenseHistory({
   loading: boolean;
   error: string | null;
   readOnly?: boolean;
+  headerAction?: ReactNode;
 }) {
   const {
     t,
@@ -424,16 +426,19 @@ export function ExpenseHistory({
   return (
     <Frame as="section" className="min-w-0 p-4 pb-28 sm:p-6 md:pb-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="type-h2">{t("expense.historyTitle")}</h2>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <h2 className="type-h2 min-w-0">{t("expense.historyTitle")}</h2>
+            {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+          </div>
           <p className="type-small mt-2 max-w-xl text-muted">
             {t("expense.historyDescription")}
           </p>
         </div>
-        <div className="hidden sm:block">
-        <Badge tone="muted" className="self-start">
-          {t("history.recordCount", { count: historyItems.length })}
-        </Badge>
+        <div className="hidden md:block">
+          <Badge tone="muted" className="self-start">
+            {t("history.recordCount", { count: historyItems.length })}
+          </Badge>
         </div>
       </div>
 
